@@ -46,7 +46,10 @@ class RecipeHomePage extends StatefulWidget {
 }
 
 class _RecipeHomePageState extends State<RecipeHomePage> {
+  final List<BrewRecipe> userRecipes = [];
   late BrewRecipe selectedRecipe = recipes.first;
+
+  List<BrewRecipe> get allRecipes => [...userRecipes, ...recipes];
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +62,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-                child: _Header(recipeCount: recipes.length),
+                child: _Header(recipeCount: allRecipes.length),
               ),
             ),
             SliverToBoxAdapter(
@@ -71,8 +74,10 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
                         children: [
                           Expanded(
                             child: _RecipeList(
+                              recipes: allRecipes,
                               selectedRecipe: selectedRecipe,
                               onSelected: _selectRecipe,
+                              onAddRecipe: _showAddRecipeForm,
                             ),
                           ),
                           const SizedBox(width: 18),
@@ -86,8 +91,10 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _RecipeList(
+                            recipes: allRecipes,
                             selectedRecipe: selectedRecipe,
                             onSelected: _selectRecipe,
+                            onAddRecipe: _showAddRecipeForm,
                           ),
                           const SizedBox(height: 18),
                           RecipeDetail(recipe: selectedRecipe),
@@ -103,6 +110,24 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
 
   void _selectRecipe(BrewRecipe recipe) {
     setState(() {
+      selectedRecipe = recipe;
+    });
+  }
+
+  Future<void> _showAddRecipeForm() async {
+    final recipe = await showModalBottomSheet<BrewRecipe>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => const AddRecipeSheet(),
+    );
+
+    if (recipe == null) {
+      return;
+    }
+
+    setState(() {
+      userRecipes.insert(0, recipe);
       selectedRecipe = recipe;
     });
   }
@@ -188,12 +213,16 @@ class _StatPill extends StatelessWidget {
 
 class _RecipeList extends StatelessWidget {
   const _RecipeList({
+    required this.recipes,
     required this.selectedRecipe,
     required this.onSelected,
+    required this.onAddRecipe,
   });
 
+  final List<BrewRecipe> recipes;
   final BrewRecipe selectedRecipe;
   final ValueChanged<BrewRecipe> onSelected;
+  final VoidCallback onAddRecipe;
 
   @override
   Widget build(BuildContext context) {
@@ -203,6 +232,15 @@ class _RecipeList extends StatelessWidget {
         const Text(
           'Pilih resep',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: onAddRecipe,
+            icon: const Icon(Icons.add),
+            label: const Text('Tambah resep'),
+          ),
         ),
         const SizedBox(height: 10),
         for (final recipe in recipes) ...[
@@ -748,6 +786,267 @@ class _Panel extends StatelessWidget {
           const SizedBox(height: 12),
           child,
         ],
+      ),
+    );
+  }
+}
+
+class AddRecipeSheet extends StatefulWidget {
+  const AddRecipeSheet({super.key});
+
+  @override
+  State<AddRecipeSheet> createState() => _AddRecipeSheetState();
+}
+
+class _AddRecipeSheetState extends State<AddRecipeSheet> {
+  final formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final methodController = TextEditingController(text: 'V60');
+  final descriptionController = TextEditingController();
+  final coffeeController = TextEditingController(text: '18');
+  final ratioController = TextEditingController(text: '15');
+  final temperatureController = TextEditingController(text: '92');
+  final grindController = TextEditingController(text: 'Medium fine');
+  final flavorController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    methodController.dispose();
+    descriptionController.dispose();
+    coffeeController.dispose();
+    ratioController.dispose();
+    temperatureController.dispose();
+    grindController.dispose();
+    flavorController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomInset + 20),
+      child: SingleChildScrollView(
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Tambah resep manual brew',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Isi parameter utama. Aplikasi akan membuat langkah seduh dasar yang bisa dipakai langsung.',
+                style: TextStyle(color: Color(0xFF685B4E), height: 1.35),
+              ),
+              const SizedBox(height: 18),
+              _TextInput(
+                controller: nameController,
+                label: 'Nama resep',
+                icon: Icons.local_cafe,
+                validator: _requiredValidator,
+              ),
+              _TextInput(
+                controller: methodController,
+                label: 'Metode',
+                icon: Icons.coffee_maker,
+                validator: _requiredValidator,
+              ),
+              _TextInput(
+                controller: descriptionController,
+                label: 'Deskripsi',
+                icon: Icons.notes,
+                maxLines: 2,
+                validator: _requiredValidator,
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _TextInput(
+                      controller: coffeeController,
+                      label: 'Kopi (g)',
+                      icon: Icons.coffee,
+                      keyboardType: TextInputType.number,
+                      validator: _numberValidator,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _TextInput(
+                      controller: ratioController,
+                      label: 'Rasio 1:x',
+                      icon: Icons.scale,
+                      keyboardType: TextInputType.number,
+                      validator: _numberValidator,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _TextInput(
+                      controller: temperatureController,
+                      label: 'Suhu (C)',
+                      icon: Icons.thermostat,
+                      keyboardType: TextInputType.number,
+                      validator: _numberValidator,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _TextInput(
+                      controller: grindController,
+                      label: 'Grind size',
+                      icon: Icons.grain,
+                      validator: _requiredValidator,
+                    ),
+                  ),
+                ],
+              ),
+              _TextInput(
+                controller: flavorController,
+                label: 'Profil rasa',
+                icon: Icons.spa,
+                validator: _requiredValidator,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Batal'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: _submit,
+                      icon: const Icon(Icons.save),
+                      label: const Text('Simpan'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _submit() {
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    final coffeeGrams = double.parse(coffeeController.text.trim()).round();
+    final ratio = double.parse(ratioController.text.trim());
+    final temperature = double.parse(temperatureController.text.trim()).round();
+    final waterGrams = (coffeeGrams * ratio).round();
+    final method = methodController.text.trim();
+
+    Navigator.of(context).pop(
+      BrewRecipe(
+        name: nameController.text.trim(),
+        method: method,
+        description: descriptionController.text.trim(),
+        difficulty: 'Custom',
+        ratio: ratio,
+        coffeeGrams: coffeeGrams,
+        waterGrams: waterGrams,
+        temperatureCelsius: temperature,
+        grindSize: grindController.text.trim(),
+        totalTimeSeconds: 180,
+        flavorProfile: flavorController.text.trim(),
+        steps: [
+          BrewStep(
+            title: 'Bloom',
+            instruction:
+                'Tuang ${coffeeGrams * 2} g air untuk membasahi semua kopi.',
+            startSecond: 0,
+          ),
+          BrewStep(
+            title: 'Pour utama',
+            instruction:
+                'Tuang perlahan sampai sekitar ${(waterGrams * 0.65).round()} g.',
+            startSecond: 40,
+          ),
+          BrewStep(
+            title: 'Final pour',
+            instruction: 'Lanjutkan tuang sampai total $waterGrams g.',
+            startSecond: 95,
+          ),
+          const BrewStep(
+            title: 'Drawdown',
+            instruction: 'Tunggu air turun dan catat hasil rasa setelah selesai.',
+            startSecond: 140,
+          ),
+        ],
+        tips: [
+          'Jika terlalu asam, coba grind lebih halus atau naikkan suhu.',
+          'Jika terlalu pahit, coba grind lebih kasar atau turunkan suhu.',
+          'Simpan perubahan kecil satu per satu agar resep mudah diulang.',
+        ],
+      ),
+    );
+  }
+
+  String? _requiredValidator(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Wajib diisi';
+    }
+
+    return null;
+  }
+
+  String? _numberValidator(String? value) {
+    final parsedValue = double.tryParse(value?.trim() ?? '');
+    if (parsedValue == null || parsedValue <= 0) {
+      return 'Masukkan angka';
+    }
+
+    return null;
+  }
+}
+
+class _TextInput extends StatelessWidget {
+  const _TextInput({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    required this.validator,
+    this.keyboardType,
+    this.maxLines = 1,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final String? Function(String?) validator;
+  final TextInputType? keyboardType;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        validator: validator,
       ),
     );
   }
