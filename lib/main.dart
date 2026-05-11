@@ -46,10 +46,14 @@ class RecipeHomePage extends StatefulWidget {
 }
 
 class _RecipeHomePageState extends State<RecipeHomePage> {
-  final List<BrewRecipe> userRecipes = [];
-  late BrewRecipe selectedRecipe = recipes.first;
+  final List<BrewRecipe> allRecipes = List.of(recipes);
+  BrewRecipe? selectedRecipe;
 
-  List<BrewRecipe> get allRecipes => [...userRecipes, ...recipes];
+  @override
+  void initState() {
+    super.initState();
+    selectedRecipe = allRecipes.first;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,10 +82,13 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
                               selectedRecipe: selectedRecipe,
                               onSelected: _selectRecipe,
                               onAddRecipe: _showAddRecipeForm,
+                              onDeleteRecipe: _confirmDeleteRecipe,
                             ),
                           ),
                           const SizedBox(width: 18),
-                          Expanded(child: RecipeDetail(recipe: selectedRecipe)),
+                          Expanded(
+                            child: _SelectedRecipeDetail(recipe: selectedRecipe),
+                          ),
                         ],
                       ),
                     )
@@ -95,9 +102,10 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
                             selectedRecipe: selectedRecipe,
                             onSelected: _selectRecipe,
                             onAddRecipe: _showAddRecipeForm,
+                            onDeleteRecipe: _confirmDeleteRecipe,
                           ),
                           const SizedBox(height: 18),
-                          RecipeDetail(recipe: selectedRecipe),
+                          _SelectedRecipeDetail(recipe: selectedRecipe),
                         ],
                       ),
                     ),
@@ -127,8 +135,40 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
     }
 
     setState(() {
-      userRecipes.insert(0, recipe);
+      allRecipes.insert(0, recipe);
       selectedRecipe = recipe;
+    });
+  }
+
+  Future<void> _confirmDeleteRecipe(BrewRecipe recipe) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus resep?'),
+        content: Text('Resep "${recipe.name}" akan dihapus dari daftar.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.delete),
+            label: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true) {
+      return;
+    }
+
+    setState(() {
+      allRecipes.remove(recipe);
+      if (selectedRecipe == recipe) {
+        selectedRecipe = allRecipes.isEmpty ? null : allRecipes.first;
+      }
     });
   }
 }
@@ -217,12 +257,14 @@ class _RecipeList extends StatelessWidget {
     required this.selectedRecipe,
     required this.onSelected,
     required this.onAddRecipe,
+    required this.onDeleteRecipe,
   });
 
   final List<BrewRecipe> recipes;
-  final BrewRecipe selectedRecipe;
+  final BrewRecipe? selectedRecipe;
   final ValueChanged<BrewRecipe> onSelected;
   final VoidCallback onAddRecipe;
+  final ValueChanged<BrewRecipe> onDeleteRecipe;
 
   @override
   Widget build(BuildContext context) {
@@ -243,15 +285,40 @@ class _RecipeList extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        for (final recipe in recipes) ...[
-          RecipeCard(
-            recipe: recipe,
-            isSelected: recipe == selectedRecipe,
-            onTap: () => onSelected(recipe),
-          ),
-          const SizedBox(height: 10),
-        ],
+        if (recipes.isEmpty)
+          const _EmptyRecipeList()
+        else
+          for (final recipe in recipes) ...[
+            RecipeCard(
+              recipe: recipe,
+              isSelected: recipe == selectedRecipe,
+              onTap: () => onSelected(recipe),
+              onDelete: () => onDeleteRecipe(recipe),
+            ),
+            const SizedBox(height: 10),
+          ],
       ],
+    );
+  }
+}
+
+class _EmptyRecipeList extends StatelessWidget {
+  const _EmptyRecipeList();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE1D5C6)),
+      ),
+      child: const Text(
+        'Belum ada resep. Tambahkan resep pertama untuk mulai brewing.',
+        style: TextStyle(color: Color(0xFF685B4E)),
+      ),
     );
   }
 }
@@ -262,11 +329,13 @@ class RecipeCard extends StatelessWidget {
     required this.recipe,
     required this.isSelected,
     required this.onTap,
+    required this.onDelete,
   });
 
   final BrewRecipe recipe;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -306,6 +375,13 @@ class RecipeCard extends StatelessWidget {
                     color: isSelected
                         ? const Color(0xFF5E7C62)
                         : const Color(0xFF9E8F7E),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: 'Hapus ${recipe.name}',
+                    color: const Color(0xFF9A4B3A),
                   ),
                 ],
               ),
@@ -349,6 +425,43 @@ class _MiniTag extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _SelectedRecipeDetail extends StatelessWidget {
+  const _SelectedRecipeDetail({required this.recipe});
+
+  final BrewRecipe? recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedRecipe = recipe;
+    if (selectedRecipe == null) {
+      return const _EmptyRecipeDetail();
+    }
+
+    return RecipeDetail(recipe: selectedRecipe);
+  }
+}
+
+class _EmptyRecipeDetail extends StatelessWidget {
+  const _EmptyRecipeDetail();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Panel(
+      title: 'Belum ada resep',
+      icon: Icons.menu_book,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text(
+            'Tambahkan resep manual brew baru untuk melihat detail, kalkulator rasio, dan timer seduh.',
+            style: TextStyle(color: Color(0xFF685B4E), height: 1.35),
+          ),
+        ],
       ),
     );
   }

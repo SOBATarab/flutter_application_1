@@ -70,4 +70,52 @@ void main() {
     expect(find.text('20 g kopi -> 320 g air'), findsOneWidget);
     expect(find.text('Custom'), findsOneWidget);
   });
+
+  testWidgets('can delete a recipe after confirmation', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const ManualBrewApp());
+
+    await tester.tap(find.text('Tambah resep'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Nama resep'),
+      'Origami Honey Cup',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Metode'),
+      'Origami',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Deskripsi'),
+      'Resep manis untuk beans honey process.',
+    );
+    await tester.enterText(find.widgetWithText(TextFormField, 'Kopi (g)'), '20');
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Rasio 1:x'),
+      '16',
+    );
+    await tester.enterText(find.widgetWithText(TextFormField, 'Suhu (C)'), '91');
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Grind size'),
+      'Medium',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Profil rasa'),
+      'Honey, apple, soft finish',
+    );
+    await tester.ensureVisible(find.text('Simpan'));
+    await tester.tap(find.text('Simpan'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Hapus Origami Honey Cup'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Hapus'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('3 resep'), findsOneWidget);
+    expect(find.text('Origami Honey Cup'), findsNothing);
+    expect(find.text('V60 Balanced Daily Cup'), findsWidgets);
+  });
 }
