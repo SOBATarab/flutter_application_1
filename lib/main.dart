@@ -2,6 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+class BrewColors {
+  static const ink = Color(0xFF241915);
+  static const muted = Color(0xFF766B61);
+  static const cream = Color(0xFFFAF7F1);
+  static const surface = Color(0xFFFFFFFF);
+  static const line = Color(0xFFE8DED2);
+  static const sage = Color(0xFF63725F);
+  static const sageSoft = Color(0xFFEAF0E7);
+  static const caramel = Color(0xFFB77943);
+  static const roast = Color(0xFF4B3329);
+  static const danger = Color(0xFF9A4B3A);
+}
+
 void main() {
   runApp(const ManualBrewApp());
 }
@@ -11,26 +24,59 @@ class ManualBrewApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const espresso = Color(0xFF3D2417);
-    const sage = Color(0xFF5E7C62);
-    const paper = Color(0xFFF7F0E6);
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Manual Brew',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: sage,
+          seedColor: BrewColors.sage,
           brightness: Brightness.light,
-          primary: espresso,
-          secondary: sage,
-          surface: paper,
+          primary: BrewColors.roast,
+          secondary: BrewColors.sage,
+          surface: BrewColors.cream,
         ),
-        scaffoldBackgroundColor: paper,
+        scaffoldBackgroundColor: BrewColors.cream,
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: BrewColors.roast,
+            foregroundColor: BrewColors.cream,
+            minimumSize: const Size(0, 46),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: BrewColors.roast,
+            side: const BorderSide(color: BrewColors.line),
+            minimumSize: const Size(0, 46),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: BrewColors.surface,
+          prefixIconColor: BrewColors.sage,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: BrewColors.line),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: BrewColors.line),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: BrewColors.sage, width: 1.4),
+          ),
+        ),
         textTheme: Typography.blackMountainView.apply(
-          bodyColor: espresso,
-          displayColor: espresso,
+          bodyColor: BrewColors.ink,
+          displayColor: BrewColors.ink,
         ),
       ),
       home: const RecipeHomePage(),
@@ -60,57 +106,71 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
     final isWide = MediaQuery.sizeOf(context).width >= 760;
 
     return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-                child: _Header(recipeCount: allRecipes.length),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFBF8F2),
+              Color(0xFFF3EEE5),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+                  child: _Header(recipeCount: allRecipes.length),
+                ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: isWide
-                  ? Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _RecipeList(
+              SliverToBoxAdapter(
+                child: isWide
+                    ? Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _RecipeList(
+                                recipes: allRecipes,
+                                selectedRecipe: selectedRecipe,
+                                onSelected: _selectRecipe,
+                                onAddRecipe: _showAddRecipeForm,
+                                onDeleteRecipe: _confirmDeleteRecipe,
+                              ),
+                            ),
+                            const SizedBox(width: 18),
+                            Expanded(
+                              child: _SelectedRecipeDetail(
+                                recipe: selectedRecipe,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _RecipeList(
                               recipes: allRecipes,
                               selectedRecipe: selectedRecipe,
                               onSelected: _selectRecipe,
                               onAddRecipe: _showAddRecipeForm,
                               onDeleteRecipe: _confirmDeleteRecipe,
                             ),
-                          ),
-                          const SizedBox(width: 18),
-                          Expanded(
-                            child: _SelectedRecipeDetail(recipe: selectedRecipe),
-                          ),
-                        ],
+                            const SizedBox(height: 18),
+                            _SelectedRecipeDetail(recipe: selectedRecipe),
+                          ],
+                        ),
                       ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _RecipeList(
-                            recipes: allRecipes,
-                            selectedRecipe: selectedRecipe,
-                            onSelected: _selectRecipe,
-                            onAddRecipe: _showAddRecipeForm,
-                            onDeleteRecipe: _confirmDeleteRecipe,
-                          ),
-                          const SizedBox(height: 18),
-                          _SelectedRecipeDetail(recipe: selectedRecipe),
-                        ],
-                      ),
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -184,35 +244,51 @@ class _Header extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: const Color(0xFF3D2417),
+                color: BrewColors.roast,
                 borderRadius: BorderRadius.circular(8),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x1A4B3329),
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.coffee, color: Color(0xFFF7F0E6)),
+              child: const Icon(Icons.coffee, color: BrewColors.cream),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Manual Brew',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
                   ),
-                  Text('Resep kopi rumahan yang mudah diulang'),
+                  SizedBox(height: 2),
+                  Text(
+                    'Resep kopi yang tenang, rapi, dan mudah diulang',
+                    style: TextStyle(color: BrewColors.muted),
+                  ),
                 ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 10,
+          runSpacing: 10,
           children: [
             _StatPill(icon: Icons.local_cafe, label: '$recipeCount resep'),
             const _StatPill(icon: Icons.timer, label: 'Timer langkah'),
@@ -233,18 +309,24 @@ class _StatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BrewColors.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE1D5C6)),
+        border: Border.all(color: BrewColors.line),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 17, color: const Color(0xFF5E7C62)),
+          Icon(icon, size: 17, color: BrewColors.sage),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: BrewColors.ink,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -273,7 +355,11 @@ class _RecipeList extends StatelessWidget {
       children: [
         const Text(
           'Pilih resep',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: BrewColors.ink,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
         ),
         const SizedBox(height: 10),
         SizedBox(
@@ -311,13 +397,13 @@ class _EmptyRecipeList extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BrewColors.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE1D5C6)),
+        border: Border.all(color: BrewColors.line),
       ),
       child: const Text(
         'Belum ada resep. Tambahkan resep pertama untuk mulai brewing.',
-        style: TextStyle(color: Color(0xFF685B4E)),
+        style: TextStyle(color: BrewColors.muted),
       ),
     );
   }
@@ -340,21 +426,26 @@ class RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isSelected ? const Color(0xFFFFF8EA) : Colors.white,
+      color: isSelected ? const Color(0xFFFFFBF4) : BrewColors.surface,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isSelected
-                  ? const Color(0xFFB78045)
-                  : const Color(0xFFE1D5C6),
-              width: isSelected ? 1.4 : 1,
+              color: isSelected ? BrewColors.caramel : BrewColors.line,
+              width: isSelected ? 1.3 : 1,
             ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0F241915),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,29 +457,29 @@ class RecipeCard extends StatelessWidget {
                       recipe.name,
                       style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
                   Icon(
                     isSelected ? Icons.check_circle : Icons.chevron_right,
-                    color: isSelected
-                        ? const Color(0xFF5E7C62)
-                        : const Color(0xFF9E8F7E),
+                    color: isSelected ? BrewColors.sage : BrewColors.muted,
                   ),
                   const SizedBox(width: 4),
                   IconButton(
                     onPressed: onDelete,
                     icon: const Icon(Icons.delete_outline),
                     tooltip: 'Hapus ${recipe.name}',
-                    color: const Color(0xFF9A4B3A),
+                    color: BrewColors.danger,
+                    visualDensity: VisualDensity.compact,
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 recipe.flavorProfile,
-                style: const TextStyle(color: Color(0xFF685B4E)),
+                style: const TextStyle(color: BrewColors.muted, height: 1.35),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -419,12 +510,16 @@ class _MiniTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF1E8),
+        color: BrewColors.sageSoft,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        style: const TextStyle(
+          color: BrewColors.roast,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -459,7 +554,7 @@ class _EmptyRecipeDetail extends StatelessWidget {
         children: const [
           Text(
             'Tambahkan resep manual brew baru untuk melihat detail, kalkulator rasio, dan timer seduh.',
-            style: TextStyle(color: Color(0xFF685B4E), height: 1.35),
+            style: TextStyle(color: BrewColors.muted, height: 1.35),
           ),
         ],
       ),
@@ -479,12 +574,17 @@ class RecipeDetail extends StatelessWidget {
       children: [
         Text(
           recipe.name,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+          style: const TextStyle(
+            color: BrewColors.ink,
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0,
+          ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Text(
           recipe.description,
-          style: const TextStyle(color: Color(0xFF685B4E), height: 1.4),
+          style: const TextStyle(color: BrewColors.muted, height: 1.45),
         ),
         const SizedBox(height: 16),
         _RecipeSpecs(recipe: recipe),
@@ -550,13 +650,21 @@ class _SpecTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BrewColors.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE1D5C6)),
+        border: Border.all(color: BrewColors.line),
       ),
       child: Row(
         children: [
-          Icon(data.icon, color: const Color(0xFF5E7C62)),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: BrewColors.sageSoft,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(data.icon, color: BrewColors.sage, size: 18),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -565,13 +673,19 @@ class _SpecTile extends StatelessWidget {
               children: [
                 Text(
                   data.label,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF685B4E)),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: BrewColors.muted,
+                  ),
                 ),
                 Text(
                   data.value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    color: BrewColors.ink,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -614,7 +728,11 @@ class _RatioCalculatorState extends State<RatioCalculator> {
         children: [
           Text(
             '${coffeeGrams.round()} g kopi -> ${water.round()} g air',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            style: const TextStyle(
+              color: BrewColors.ink,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           Slider(
             value: coffeeGrams,
@@ -626,7 +744,7 @@ class _RatioCalculatorState extends State<RatioCalculator> {
           ),
           Text(
             'Rasio ${widget.recipe.ratioLabel}. Geser sesuai dosis kopi yang mau dipakai.',
-            style: const TextStyle(color: Color(0xFF685B4E)),
+            style: const TextStyle(color: BrewColors.muted),
           ),
         ],
       ),
@@ -682,7 +800,11 @@ class _BrewTimerState extends State<BrewTimer> {
         children: [
           Text(
             _formatTime(elapsedSeconds),
-            style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900),
+            style: const TextStyle(
+              color: BrewColors.ink,
+              fontSize: 38,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 6),
           LinearProgressIndicator(
@@ -693,12 +815,16 @@ class _BrewTimerState extends State<BrewTimer> {
           const SizedBox(height: 12),
           Text(
             currentStep.title,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              color: BrewColors.ink,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             currentStep.instruction,
-            style: const TextStyle(color: Color(0xFF685B4E), height: 1.35),
+            style: const TextStyle(color: BrewColors.muted, height: 1.35),
           ),
           const SizedBox(height: 14),
           Row(
@@ -781,13 +907,16 @@ class _StepTimeline extends StatelessWidget {
                     width: 54,
                     padding: const EdgeInsets.symmetric(vertical: 7),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEAF1E8),
+                      color: BrewColors.sageSoft,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       _formatTime(step.startSecond),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(
+                        color: BrewColors.roast,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -797,12 +926,15 @@ class _StepTimeline extends StatelessWidget {
                       children: [
                         Text(
                           step.title,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
+                          style: const TextStyle(
+                            color: BrewColors.ink,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                         Text(
                           step.instruction,
                           style: const TextStyle(
-                            color: Color(0xFF685B4E),
+                            color: BrewColors.muted,
                             height: 1.35,
                           ),
                         ),
@@ -846,7 +978,7 @@ class _TroubleshootingTips extends StatelessWidget {
                   const Icon(
                     Icons.check_circle,
                     size: 18,
-                    color: Color(0xFF5E7C62),
+                    color: BrewColors.sage,
                   ),
                   const SizedBox(width: 8),
                   Expanded(child: Text(tip)),
@@ -876,20 +1008,28 @@ class _Panel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: BrewColors.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE1D5C6)),
+        border: Border.all(color: BrewColors.line),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D241915),
+            blurRadius: 22,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: const Color(0xFF5E7C62)),
+              Icon(icon, color: BrewColors.sage),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: const TextStyle(
+                  color: BrewColors.ink,
                   fontSize: 17,
                   fontWeight: FontWeight.w900,
                 ),
@@ -955,7 +1095,7 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
               const SizedBox(height: 6),
               const Text(
                 'Isi parameter utama. Aplikasi akan membuat langkah seduh dasar yang bisa dipakai langsung.',
-                style: TextStyle(color: Color(0xFF685B4E), height: 1.35),
+                style: TextStyle(color: BrewColors.muted, height: 1.35),
               ),
               const SizedBox(height: 18),
               _TextInput(
