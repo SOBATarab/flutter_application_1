@@ -36,7 +36,7 @@ void main() {
     await tester.tap(find.text('Tambah resep'));
     await tester.pumpAndSettle();
 
-    expect(find.text('URL foto (opsional)'), findsOneWidget);
+    expect(find.text('Pilih foto'), findsOneWidget);
 
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Nama resep'),

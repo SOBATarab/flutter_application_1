@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class BrewColors {
   static const ink = Color(0xFFF7EFE5);
@@ -418,7 +420,7 @@ class _BrewFocusCard extends StatelessWidget {
               children: [
                 _RecipePhotoFrame(
                   label: selectedRecipe.photoHint,
-                  imageUrl: selectedRecipe.photoUrl,
+                  imagePath: selectedRecipe.photoPath,
                   height: 118,
                 ),
                 const SizedBox(height: 14),
@@ -506,20 +508,20 @@ class _FocusMetric extends StatelessWidget {
 class _RecipePhotoFrame extends StatelessWidget {
   const _RecipePhotoFrame({
     required this.label,
-    this.imageUrl,
+    this.imagePath,
     this.height = 150,
     this.compact = false,
   });
 
   final String label;
-  final String? imageUrl;
+  final String? imagePath;
   final double height;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final resolvedImageUrl = imageUrl?.trim();
-    final hasImage = resolvedImageUrl != null && resolvedImageUrl.isNotEmpty;
+    final resolvedImagePath = imagePath?.trim();
+    final hasImage = resolvedImagePath != null && resolvedImagePath.isNotEmpty;
 
     return Container(
       height: height,
@@ -535,8 +537,8 @@ class _RecipePhotoFrame extends StatelessWidget {
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  resolvedImageUrl,
+                child: Image.file(
+                  File(resolvedImagePath),
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return _PhotoPlaceholder(label: label, compact: compact);
@@ -834,7 +836,7 @@ class RecipeCard extends StatelessWidget {
             children: [
               _RecipePhotoFrame(
                 label: recipe.photoHint,
-                imageUrl: recipe.photoUrl,
+                imagePath: recipe.photoPath,
                 height: 88,
                 compact: true,
               ),
@@ -1000,7 +1002,7 @@ class _RecipeHero extends StatelessWidget {
         children: [
           _RecipePhotoFrame(
             label: recipe.photoHint,
-            imageUrl: recipe.photoUrl,
+            imagePath: recipe.photoPath,
             height: 180,
           ),
           const SizedBox(height: 14),
@@ -1602,6 +1604,7 @@ class AddRecipeSheet extends StatefulWidget {
 
 class _AddRecipeSheetState extends State<AddRecipeSheet> {
   final formKey = GlobalKey<FormState>();
+  final imagePicker = ImagePicker();
   final nameController = TextEditingController();
   final methodController = TextEditingController(text: 'V60');
   final descriptionController = TextEditingController();
@@ -1610,12 +1613,12 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
   final temperatureController = TextEditingController(text: '92');
   final grindController = TextEditingController(text: 'Medium fine');
   final flavorController = TextEditingController();
-  final photoUrlController = TextEditingController();
   final varietyController = TextEditingController(text: 'Arabica');
   final processController = TextEditingController(text: 'Washed');
   final roastController = TextEditingController(text: 'Medium light');
   final originController = TextEditingController(text: 'Indonesia');
   final beanCharacterController = TextEditingController();
+  String? selectedPhotoPath;
 
   @override
   void dispose() {
@@ -1627,7 +1630,6 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
     temperatureController.dispose();
     grindController.dispose();
     flavorController.dispose();
-    photoUrlController.dispose();
     varietyController.dispose();
     processController.dispose();
     roastController.dispose();
@@ -1729,12 +1731,10 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
                 icon: Icons.spa,
                 validator: _requiredValidator,
               ),
-              _TextInput(
-                controller: photoUrlController,
-                label: 'URL foto (opsional)',
-                icon: Icons.add_photo_alternate_outlined,
-                keyboardType: TextInputType.url,
-                validator: _optionalUrlValidator,
+              _PhotoPickerField(
+                photoPath: selectedPhotoPath,
+                onPickPhoto: _pickPhoto,
+                onClearPhoto: _clearPhoto,
               ),
               const SizedBox(height: 6),
               const Text(
@@ -1845,7 +1845,7 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
         grindSize: grindController.text.trim(),
         totalTimeSeconds: 180,
         flavorProfile: flavorController.text.trim(),
-        photoUrl: _cleanOptionalText(photoUrlController.text),
+        photoPath: selectedPhotoPath,
         photoHint:
             'Foto ${methodController.text.trim()} ${nameController.text.trim()}',
         beanProfile: CoffeeBeanProfile(
@@ -1908,23 +1908,25 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
     return null;
   }
 
-  String? _optionalUrlValidator(String? value) {
-    final text = value?.trim() ?? '';
-    if (text.isEmpty) {
-      return null;
+  Future<void> _pickPhoto() async {
+    final photo = await imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (photo == null) {
+      return;
     }
 
-    final uri = Uri.tryParse(text);
-    if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
-      return 'Masukkan URL valid';
-    }
-
-    return null;
+    setState(() {
+      selectedPhotoPath = photo.path;
+    });
   }
 
-  String? _cleanOptionalText(String value) {
-    final text = value.trim();
-    return text.isEmpty ? null : text;
+  void _clearPhoto() {
+    setState(() {
+      selectedPhotoPath = null;
+    });
   }
 
   String _temperatureHint(int temperature) {
@@ -1998,6 +2000,82 @@ class _TextInput extends StatelessWidget {
   }
 }
 
+class _PhotoPickerField extends StatelessWidget {
+  const _PhotoPickerField({
+    required this.photoPath,
+    required this.onPickPhoto,
+    required this.onClearPhoto,
+  });
+
+  final String? photoPath;
+  final VoidCallback onPickPhoto;
+  final VoidCallback onClearPhoto;
+
+  @override
+  Widget build(BuildContext context) {
+    final fileName = photoPath == null
+        ? null
+        : photoPath!.split(Platform.pathSeparator).last;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: BrewColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: BrewColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.add_photo_alternate_outlined,
+                color: BrewColors.sage,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Foto resep',
+                style: TextStyle(
+                  color: BrewColors.ink,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            fileName ?? 'Belum ada foto. Pilih gambar JPG/PNG dari galeri.',
+            style: const TextStyle(color: BrewColors.muted, height: 1.35),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onPickPhoto,
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: const Text('Pilih foto'),
+                ),
+              ),
+              if (photoPath != null) ...[
+                const SizedBox(width: 10),
+                IconButton.outlined(
+                  onPressed: onClearPhoto,
+                  icon: const Icon(Icons.close),
+                  tooltip: 'Hapus foto',
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class BrewRecipe {
   const BrewRecipe({
     required this.name,
@@ -2011,7 +2089,7 @@ class BrewRecipe {
     required this.grindSize,
     required this.totalTimeSeconds,
     required this.flavorProfile,
-    this.photoUrl,
+    this.photoPath,
     required this.photoHint,
     required this.beanProfile,
     required this.steps,
@@ -2029,7 +2107,7 @@ class BrewRecipe {
   final String grindSize;
   final int totalTimeSeconds;
   final String flavorProfile;
-  final String? photoUrl;
+  final String? photoPath;
   final String photoHint;
   final CoffeeBeanProfile beanProfile;
   final List<BrewStep> steps;
