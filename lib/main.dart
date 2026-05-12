@@ -595,39 +595,6 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-class _StatPill extends StatelessWidget {
-  const _StatPill({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: BrewColors.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: BrewColors.line),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 17, color: BrewColors.sage),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: BrewColors.ink,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _BrewFocusCard extends StatelessWidget {
   const _BrewFocusCard({required this.recipe});
 
@@ -970,37 +937,6 @@ class _PhotoPlaceholder extends StatelessWidget {
   }
 }
 
-class _MethodFilterBar extends StatelessWidget {
-  const _MethodFilterBar({
-    required this.methods,
-    required this.selectedMethod,
-    required this.onSelected,
-  });
-
-  final List<String> methods;
-  final String selectedMethod;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final method in methods) ...[
-            _MethodFilterChip(
-              label: method,
-              isSelected: method == selectedMethod,
-              onTap: () => onSelected(method),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 class _BrewMethodsSection extends StatelessWidget {
   const _BrewMethodsSection({
     required this.recipes,
@@ -1129,46 +1065,6 @@ class _BrewMethodsSection extends StatelessWidget {
     }
 
     return Icons.local_cafe_outlined;
-  }
-}
-
-class _MethodFilterChip extends StatelessWidget {
-  const _MethodFilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: isSelected ? BrewColors.roast : BrewColors.surface,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isSelected ? BrewColors.roast : BrewColors.line,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? BrewColors.cream : BrewColors.ink,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 
