@@ -119,12 +119,6 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
   String selectedMethod = 'Semua';
   int activeTab = 0;
 
-  List<String> get methodFilters {
-    final methods = allRecipes.map((recipe) => recipe.method).toSet().toList()
-      ..sort();
-    return ['Semua', ...methods];
-  }
-
   List<BrewRecipe> get visibleRecipes {
     if (selectedMethod == 'Semua') {
       return allRecipes;
