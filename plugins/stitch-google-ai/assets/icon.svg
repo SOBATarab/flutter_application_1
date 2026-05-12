@@ -1,0 +1,6 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Stitch Google AI icon">
+  <rect width="128" height="128" rx="24" fill="#1A73E8"/>
+  <path d="M38 36h52a10 10 0 0 1 10 10v36a10 10 0 0 1-10 10H38a10 10 0 0 1-10-10V46a10 10 0 0 1 10-10Z" fill="#FFFFFF"/>
+  <path d="M46 54h36M46 68h24M46 82h32" stroke="#1A73E8" stroke-width="8" stroke-linecap="round"/>
+  <path d="M91 28l3.5 9.5L104 41l-9.5 3.5L91 54l-3.5-9.5L78 41l9.5-3.5L91 28Z" fill="#FBBC04"/>
+</svg>

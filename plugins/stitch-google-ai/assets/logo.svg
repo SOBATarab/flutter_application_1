@@ -1,0 +1,9 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="640" height="240" viewBox="0 0 640 240" role="img" aria-label="Stitch Google AI logo">
+  <rect width="640" height="240" rx="32" fill="#FFFFFF"/>
+  <rect x="40" y="48" width="144" height="144" rx="28" fill="#1A73E8"/>
+  <path d="M76 86h72a12 12 0 0 1 12 12v44a12 12 0 0 1-12 12H76a12 12 0 0 1-12-12V98a12 12 0 0 1 12-12Z" fill="#FFFFFF"/>
+  <path d="M86 108h46M86 124h30M86 140h40" stroke="#1A73E8" stroke-width="9" stroke-linecap="round"/>
+  <path d="M154 70l4 11 11 4-11 4-4 11-4-11-11-4 11-4 4-11Z" fill="#FBBC04"/>
+  <text x="216" y="116" fill="#202124" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="700">Stitch Google AI</text>
+  <text x="218" y="160" fill="#5F6368" font-family="Arial, Helvetica, sans-serif" font-size="24">AI UI design workflow plugin</text>
+</svg>
