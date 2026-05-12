@@ -11,8 +11,8 @@ void main() {
 
     expect(find.text('Artisan Brew'), findsOneWidget);
     expect(find.text('Selamat Pagi,\nCoffee Lover'), findsOneWidget);
-    expect(find.text('V60 Balanced Daily Cup'), findsWidgets);
-    expect(find.text('Kalita Sweet Cup'), findsOneWidget);
+    expect(find.text('Classic V60 Ethiopia'), findsWidgets);
+    expect(find.text('Sunset Bloom Kenya'), findsOneWidget);
 
     await tester.tap(find.text('Brew'));
     await tester.pumpAndSettle();
@@ -20,13 +20,13 @@ void main() {
     expect(find.text('Kalkulator rasio'), findsOneWidget);
     expect(find.text('Profil biji kopi'), findsOneWidget);
     expect(find.text('Typica / Bourbon'), findsWidgets);
-    expect(find.text('18 g kopi -> 270 g air'), findsOneWidget);
+    expect(find.text('20 g kopi -> 300 g air'), findsOneWidget);
   });
 
   testWidgets('can select another recipe', (WidgetTester tester) async {
     await tester.pumpWidget(const ManualBrewApp());
 
-    await tester.tap(find.text('AeroPress Quick Morning').first);
+    await tester.tap(find.text('Midnight Bold Brazil').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Brew'));
     await tester.pumpAndSettle();
@@ -146,6 +146,6 @@ void main() {
 
     expect(find.text('3 resep'), findsOneWidget);
     expect(find.text('Origami Honey Cup'), findsNothing);
-    expect(find.text('V60 Balanced Daily Cup'), findsWidgets);
+    expect(find.text('Classic V60 Ethiopia'), findsWidgets);
   });
 }

@@ -5,20 +5,35 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class BrewColors {
-  static const ink = Color(0xFFF7EFE5);
-  static const muted = Color(0xFFC1B4A8);
-  static const cream = Color(0xFFFAF2E8);
-  static const surface = Color(0xFF181310);
-  static const surfaceHigh = Color(0xFF211A16);
-  static const line = Color(0xFF3A3029);
+  static const ink = Color(0xFFEDE1D0);
+  static const muted = Color(0xFFD4C5AB);
+  static const cream = Color(0xFFFFE2AB);
+  static const surface = Color(0xFF201B11);
+  static const surfaceHigh = Color(0xFF2F291E);
+  static const line = Color(0xFF504532);
   static const sage = Color(0xFFA8B79B);
   static const sageSoft = Color(0xFF2C382A);
-  static const caramel = Color(0xFFD89A5B);
-  static const roast = Color(0xFF0F0B09);
-  static const danger = Color(0xFFE39A87);
-  static const warm = Color(0xFF241B16);
-  static const goldSoft = Color(0xFFE6C99B);
-  static const photo = Color(0xFF2A211C);
+  static const caramel = Color(0xFFEABDA0);
+  static const roast = Color(0xFF181309);
+  static const danger = Color(0xFFFFB4AB);
+  static const warm = Color(0xFF241F14);
+  static const goldSoft = Color(0xFFFFE2AB);
+  static const amber = Color(0xFFFFBF00);
+  static const secondaryContainer = Color(0xFF61422C);
+  static const photo = Color(0xFF3A3428);
+}
+
+class BrewImages {
+  static const heroV60 =
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAka3GyFI32vji-UtgJYbEoqifoqaGjClV4gudaQHXoWMSmwXG3ilRe_ijkbTH6mZQQvjkjZw5iHrpOB4OOwE2gSfWp9Kqze2ACK-iAKGP33mmCAgPtkWUCUGkR3KXLOx8U1_I9Dh6O8avLM-QUTYsEk2QpFTvLIiCWLccVpPOsYlWSWsYOL2k8xuFRxclYMb3MqjYkzWsHna_i6n2l1SZishjizezDqdxanQWAjNDYnliyvTOP9w_C5w63VdyUw-vdw2O5BMRMGfI';
+  static const chemex =
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBzhzk4u-JY_FnLei65vA9JxwmmoE2R6RVIdnKexNCCe5GGXqAeSh4NX442XyTlpo9egdDXo_O5oBOzfllrrf-kmpU-WJP_0DAuQDwpfxsgdoJSnGsPZ8i-vmz6p2CCZJIVo1T2b_jwqrv5rH6fzl0X8iCFKXGoVeOO9wM8QGK_G694Sz5N0WH8w9zD1BD6sju673NCCToznhkZg-itCx2p_ofV161dEb2qRpao1g4yEzu1QJ-C6ioXIA4zfdsUvDU1itPkgWl5ZaI';
+  static const aeroPress =
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuASn7QwGAyaANRnHdo9pkrQfeZ9znSDKGQSHAA1ERWcmuWSkCI1sVOAAhMhTzBGSNfIqgvFAn1EYhnO-PNWXp4pZl9xYL5zWs4UUhc0gOxbl7FfhbVqtShjvyZ2Vw1w5MSs8rxsU2NLsOouzGZtwHTRHnVG_3i967yyMPO5_9MQTZIH0FNozcF9v1i2z69kvtfWDblBib2UyvlD_X9VAcj20PPAgXxqb_6-i8-vJjVCzRVavZ59wvHnPu49DX9HDA85RUTnpqFEpu4';
+  static const frenchPress =
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB2D0LiSK3rD-6xUh_TuF5Q4lAa02eO2umzkjZ8GJzYMDiwEHC1aT6vgipp0qlVKu_9f5zHliKC56gra2cTuYLBGC6u8gNitFAYQKbe_jFDys1aOXdnJOl_v2Xtec9Ut5bn6nPvADilw396welfuZms7Wumtx2hgwEyR7SG7bdtUuacgsgNypAnmFNr9Frc_COiOtE37opCZ5KeuAq9wfcUSWLyeIQvWmFysrumlpwZO_ttqUDbcgdL2N45Q5N-HckIizLnp5jJ6xI';
+  static const profile =
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBgwrY-ejgIylUzRtvgahJzuVepwgzr6IXzWlXOgWK-bopUBO9kmwA3snnlKwexsIf_kmBcwRVmz4NIVPPr-n1u1r1YWljYSR7NF5SVSkkAoDoXqlutCqJ8VnxK1Y6ISkRw4wSeNnMK7lB9OEJ4AxJUZt0u8-rS0-Jv4X17TBTQ4uqpMu6BSi-EFiERbsBbr-He6RzTwwgsh7p7dCAthSH44JJLLQnoccGHwX7_AKzhqK13oak5RAWAweMXdjCBwVNhwSUj4ey5BHE';
 }
 
 void main() {
@@ -129,6 +144,15 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: activeTab == 1
+          ? null
+          : FloatingActionButton(
+              onPressed: _showAddRecipeForm,
+              backgroundColor: BrewColors.goldSoft,
+              foregroundColor: BrewColors.roast,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.add),
+            ),
       bottomNavigationBar: _ArtisanBottomNav(
         activeIndex: activeTab,
         onSelected: (index) => setState(() => activeTab = index),
@@ -186,7 +210,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
       _ => [
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 18, 20, 6),
-            _Header(recipeCount: allRecipes.length),
+            const _Header(),
           ),
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 0, 20, 6),
@@ -296,9 +320,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.recipeCount});
-
-  final int recipeCount;
+  const _Header();
 
   @override
   Widget build(BuildContext context) {
@@ -476,11 +498,11 @@ class _ArtisanBottomNav extends StatelessWidget {
       top: false,
       child: Container(
         height: 72,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        margin: EdgeInsets.zero,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: BrewColors.surface,
-          borderRadius: BorderRadius.circular(8),
+          color: const Color(0xFF120E05),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
           border: Border.all(color: BrewColors.line),
           boxShadow: const [
             BoxShadow(
@@ -644,7 +666,8 @@ class _BrewFocusCard extends StatelessWidget {
                   _RecipePhotoFrame(
                     label: selectedRecipe.photoHint,
                     imagePath: selectedRecipe.photoPath,
-                    height: 232,
+                    imageUrl: selectedRecipe.photoUrl,
+                    height: 320,
                   ),
                   Positioned.fill(
                     child: DecoratedBox(
@@ -653,7 +676,7 @@ class _BrewFocusCard extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.08),
+                            Colors.black.withValues(alpha: 0.02),
                             Colors.black.withValues(alpha: 0.72),
                           ],
                         ),
@@ -667,13 +690,15 @@ class _BrewFocusCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const _HeroBadge(label: 'ARTISAN BREW'),
+                        const _HeroBadge(label: 'FEATURED RECIPE'),
                         const SizedBox(height: 10),
                         Text(
                           selectedRecipe.name,
                           style: const TextStyle(
                             color: BrewColors.cream,
-                            fontSize: 26,
+                            fontFamily: 'Playfair Display',
+                            fontSize: 32,
+                            height: 1.1,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0,
                           ),
@@ -684,8 +709,9 @@ class _BrewFocusCard extends StatelessWidget {
                           style: const TextStyle(
                             color: BrewColors.muted,
                             height: 1.35,
-                            fontWeight: FontWeight.w700,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 12),
                         Wrap(
@@ -709,7 +735,7 @@ class _BrewFocusCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 14),
                         SizedBox(
-                          width: 132,
+                          width: 148,
                           child: FilledButton(
                             onPressed: () {},
                             child: const Text('Start Brew'),
@@ -788,12 +814,14 @@ class _RecipePhotoFrame extends StatelessWidget {
   const _RecipePhotoFrame({
     required this.label,
     this.imagePath,
+    this.imageUrl,
     this.height = 150,
     this.compact = false,
   });
 
   final String label;
   final String? imagePath;
+  final String? imageUrl;
   final double height;
   final bool compact;
 
@@ -802,6 +830,9 @@ class _RecipePhotoFrame extends StatelessWidget {
     final resolvedImagePath = imagePath?.trim();
     final hasImage = resolvedImagePath != null && resolvedImagePath.isNotEmpty;
     final imageFile = hasImage ? XFile(resolvedImagePath) : null;
+    final resolvedImageUrl = imageUrl?.trim();
+    final hasNetworkImage =
+        resolvedImageUrl != null && resolvedImageUrl.isNotEmpty;
 
     return Container(
       height: height,
@@ -839,11 +870,24 @@ class _RecipePhotoFrame extends StatelessWidget {
                 ),
               ),
             )
+          else if (hasNetworkImage)
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  resolvedImageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return _PhotoPlaceholder(label: label, compact: compact);
+                  },
+                ),
+              ),
+            )
           else
             Positioned.fill(
               child: _PhotoPlaceholder(label: label, compact: compact),
             ),
-          if (hasImage)
+          if (hasImage || hasNetworkImage)
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -999,9 +1043,9 @@ class _BrewMethodsSection extends StatelessWidget {
           itemCount: methods.length,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 150,
-            mainAxisExtent: 92,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisExtent: 154,
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
           ),
@@ -1027,15 +1071,20 @@ class _BrewMethodsSection extends StatelessWidget {
                     ),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        _methodIcon(method),
-                        color: isSelected ? BrewColors.goldSoft : BrewColors.sage,
+                      Expanded(
+                        child: Center(
+                          child: Icon(
+                            _methodIcon(method),
+                            color: BrewColors.goldSoft,
+                            size: 42,
+                          ),
+                        ),
                       ),
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             method,
@@ -1169,7 +1218,7 @@ class _LatestRecipesSection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         SizedBox(
-          height: 220,
+          height: 324,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: recipes.length,
@@ -1203,7 +1252,7 @@ class _LatestRecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 176,
+      width: 260,
       child: Material(
         color: isSelected ? BrewColors.warm : BrewColors.surface,
         borderRadius: BorderRadius.circular(8),
@@ -1211,7 +1260,7 @@ class _LatestRecipeCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.zero,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
@@ -1224,44 +1273,78 @@ class _LatestRecipeCard extends StatelessWidget {
                 _RecipePhotoFrame(
                   label: recipe.photoHint,
                   imagePath: recipe.photoPath,
-                  height: 96,
+                  imageUrl: recipe.photoUrl,
+                  height: 160,
                   compact: true,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  recipe.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: BrewColors.cream,
-                    fontSize: 15,
-                    height: 1.15,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 6),
                 Expanded(
-                  child: Text(
-                    recipe.flavorProfile,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: BrewColors.muted,
-                      fontSize: 12,
-                      height: 1.3,
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          recipe.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: BrewColors.cream,
+                            fontFamily: 'Playfair Display',
+                            fontSize: 20,
+                            height: 1.15,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _MicroMeta(
+                              icon: Icons.speed,
+                              label: recipe.difficulty,
+                            ),
+                            const SizedBox(width: 12),
+                            _MicroMeta(
+                              icon: Icons.timer_outlined,
+                              label: recipe.totalTimeLabel,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Expanded(
+                          child: Text(
+                            recipe.flavorProfile,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: BrewColors.muted,
+                              fontSize: 13,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            const Text(
+                              'Resep Expert',
+                              style: TextStyle(
+                                color: BrewColors.goldSoft,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const Spacer(),
+                            Icon(
+                              isSelected
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_border,
+                              color: BrewColors.goldSoft,
+                              size: 19,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                Row(
-                  children: [
-                    _MicroMeta(icon: Icons.timer_outlined, label: recipe.totalTimeLabel),
-                    const Spacer(),
-                    const Icon(
-                      Icons.bookmark_border,
-                      color: BrewColors.goldSoft,
-                      size: 17,
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -1389,6 +1472,7 @@ class _CollectionRecipeTile extends StatelessWidget {
               _RecipePhotoFrame(
                 label: recipe.photoHint,
                 imagePath: recipe.photoPath,
+                imageUrl: recipe.photoUrl,
                 height: 138,
               ),
               Padding(
@@ -1492,10 +1576,17 @@ class _ProfileView extends StatelessWidget {
                   color: BrewColors.warm,
                   border: Border.all(color: BrewColors.goldSoft, width: 1.4),
                 ),
-                child: const Icon(
-                  Icons.person,
-                  color: BrewColors.goldSoft,
-                  size: 42,
+                clipBehavior: Clip.antiAlias,
+                child: Image.network(
+                  BrewImages.profile,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.person,
+                      color: BrewColors.goldSoft,
+                      size: 42,
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 14),
@@ -1509,7 +1600,7 @@ class _ProfileView extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Home Brewer & Filter Coffee Lover',
+                'Master Brewer & Ritualist',
                 style: TextStyle(
                   color: BrewColors.goldSoft,
                   fontWeight: FontWeight.w700,
@@ -1822,6 +1913,7 @@ class RecipeCard extends StatelessWidget {
               _RecipePhotoFrame(
                 label: recipe.photoHint,
                 imagePath: recipe.photoPath,
+                imageUrl: recipe.photoUrl,
                 height: 88,
                 compact: true,
               ),
@@ -1976,64 +2068,77 @@ class _RecipeHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: BrewColors.warm,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: BrewColors.line),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
           _RecipePhotoFrame(
             label: recipe.photoHint,
             imagePath: recipe.photoPath,
-            height: 180,
+            imageUrl: recipe.photoUrl,
+            height: 360,
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: BrewColors.goldSoft,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.coffee,
-                  color: BrewColors.roast,
-                  size: 20,
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    BrewColors.roast.withValues(alpha: 0.94),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
+            ),
+          ),
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 22,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _MiniTag(recipe.method),
+                    _MiniTag(recipe.beanProfile.roastLevel),
+                    _MiniTag(recipe.beanProfile.process),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
                   recipe.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: BrewColors.ink,
-                    fontSize: 24,
+                    color: BrewColors.cream,
+                    fontFamily: 'Playfair Display',
+                    fontSize: 34,
+                    height: 1.05,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            recipe.description,
-            style: const TextStyle(color: BrewColors.muted, height: 1.45),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _MiniTag(recipe.beanProfile.process),
-              _MiniTag(recipe.beanProfile.roastLevel),
-              _MiniTag(recipe.beanProfile.origin),
-            ],
+                const SizedBox(height: 10),
+                Text(
+                  recipe.description,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: BrewColors.muted,
+                    height: 1.45,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -3077,6 +3182,7 @@ class BrewRecipe {
     required this.totalTimeSeconds,
     required this.flavorProfile,
     this.photoPath,
+    this.photoUrl,
     required this.photoHint,
     required this.beanProfile,
     required this.steps,
@@ -3095,6 +3201,7 @@ class BrewRecipe {
   final int totalTimeSeconds;
   final String flavorProfile;
   final String? photoPath;
+  final String? photoUrl;
   final String photoHint;
   final CoffeeBeanProfile beanProfile;
   final List<BrewStep> steps;
@@ -3140,18 +3247,19 @@ class BrewStep {
 
 const recipes = [
   BrewRecipe(
-    name: 'V60 Balanced Daily Cup',
+    name: 'Classic V60 Ethiopia',
     method: 'V60',
     description:
-        'Resep harian yang seimbang untuk sweetness, acidity ringan, dan finish bersih.',
-    difficulty: 'Mudah',
+        'A vibrant and floral profile, featuring notes of bergamot and jasmine, characteristic of high-altitude Ethiopian beans.',
+    difficulty: 'Light',
     ratio: 15,
-    coffeeGrams: 18,
-    waterGrams: 270,
+    coffeeGrams: 20,
+    waterGrams: 300,
     temperatureCelsius: 92,
-    grindSize: 'Medium fine',
+    grindSize: 'Medium',
     totalTimeSeconds: 180,
-    flavorProfile: 'Sweet, clean, citrus ringan',
+    flavorProfile: 'Bright floral notes, citrus acidity, jasmine finish',
+    photoUrl: BrewImages.heroV60,
     photoHint: 'Foto V60 pour over',
     beanProfile: CoffeeBeanProfile(
       variety: 'Typica / Bourbon',
@@ -3194,18 +3302,19 @@ const recipes = [
     ],
   ),
   BrewRecipe(
-    name: 'Kalita Sweet Cup',
-    method: 'Kalita',
+    name: 'Sunset Bloom Kenya',
+    method: 'Chemex',
     description:
-        'Cup yang manis dan stabil dengan aliran lebih forgiving untuk pagi hari.',
-    difficulty: 'Mudah',
+        'Bright, berry-forward profile with a clean finish using the Chemex method.',
+    difficulty: 'Light',
     ratio: 16,
     coffeeGrams: 20,
     waterGrams: 320,
     temperatureCelsius: 93,
     grindSize: 'Medium',
-    totalTimeSeconds: 210,
-    flavorProfile: 'Caramel, round, soft acidity',
+    totalTimeSeconds: 300,
+    flavorProfile: 'Bright berry, clean finish, elegant sweetness',
+    photoUrl: BrewImages.chemex,
     photoHint: 'Foto Kalita dripper',
     beanProfile: CoffeeBeanProfile(
       variety: 'Caturra / Catuai',
@@ -3248,18 +3357,19 @@ const recipes = [
     ],
   ),
   BrewRecipe(
-    name: 'AeroPress Quick Morning',
+    name: 'Midnight Bold Brazil',
     method: 'AeroPress',
     description:
-        'Resep cepat untuk cup pekat, manis, dan mudah dibuat sebelum berangkat.',
-    difficulty: 'Cepat',
+        'A heavy-bodied, nutty experience perfect for those who love intense flavors.',
+    difficulty: 'Dark',
     ratio: 14,
     coffeeGrams: 16,
     waterGrams: 224,
     temperatureCelsius: 88,
     grindSize: 'Medium fine',
-    totalTimeSeconds: 120,
-    flavorProfile: 'Bold, sweet, low bitterness',
+    totalTimeSeconds: 180,
+    flavorProfile: 'Nutty, bold, heavy body',
+    photoUrl: BrewImages.aeroPress,
     photoHint: 'Foto AeroPress brew',
     beanProfile: CoffeeBeanProfile(
       variety: 'Heirloom / Mixed cultivar',
