@@ -13,6 +13,8 @@ class BrewColors {
   static const caramel = Color(0xFFB77943);
   static const roast = Color(0xFF4B3329);
   static const danger = Color(0xFF9A4B3A);
+  static const warm = Color(0xFFFFFBF4);
+  static const goldSoft = Color(0xFFF4E7D2);
 }
 
 void main() {
@@ -94,6 +96,23 @@ class RecipeHomePage extends StatefulWidget {
 class _RecipeHomePageState extends State<RecipeHomePage> {
   final List<BrewRecipe> allRecipes = List.of(recipes);
   BrewRecipe? selectedRecipe;
+  String selectedMethod = 'Semua';
+
+  List<String> get methodFilters {
+    final methods = allRecipes.map((recipe) => recipe.method).toSet().toList()
+      ..sort();
+    return ['Semua', ...methods];
+  }
+
+  List<BrewRecipe> get visibleRecipes {
+    if (selectedMethod == 'Semua') {
+      return allRecipes;
+    }
+
+    return allRecipes
+        .where((recipe) => recipe.method == selectedMethod)
+        .toList();
+  }
 
   @override
   void initState() {
@@ -127,6 +146,22 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
                 ),
               ),
               SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                  child: _BrewFocusCard(recipe: selectedRecipe),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 2),
+                  child: _MethodFilterBar(
+                    methods: methodFilters,
+                    selectedMethod: selectedMethod,
+                    onSelected: _selectMethod,
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
                 child: isWide
                     ? Padding(
                         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -135,7 +170,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
                           children: [
                             Expanded(
                               child: _RecipeList(
-                                recipes: allRecipes,
+                                recipes: visibleRecipes,
                                 selectedRecipe: selectedRecipe,
                                 onSelected: _selectRecipe,
                                 onAddRecipe: _showAddRecipeForm,
@@ -157,7 +192,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _RecipeList(
-                              recipes: allRecipes,
+                              recipes: visibleRecipes,
                               selectedRecipe: selectedRecipe,
                               onSelected: _selectRecipe,
                               onAddRecipe: _showAddRecipeForm,
@@ -182,6 +217,16 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
     });
   }
 
+  void _selectMethod(String method) {
+    setState(() {
+      selectedMethod = method;
+      final filteredRecipes = visibleRecipes;
+      if (!filteredRecipes.contains(selectedRecipe)) {
+        selectedRecipe = filteredRecipes.isEmpty ? null : filteredRecipes.first;
+      }
+    });
+  }
+
   Future<void> _showAddRecipeForm() async {
     final recipe = await showModalBottomSheet<BrewRecipe>(
       context: context,
@@ -196,6 +241,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
 
     setState(() {
       allRecipes.insert(0, recipe);
+      selectedMethod = 'Semua';
       selectedRecipe = recipe;
     });
   }
@@ -227,7 +273,8 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
     setState(() {
       allRecipes.remove(recipe);
       if (selectedRecipe == recipe) {
-        selectedRecipe = allRecipes.isEmpty ? null : allRecipes.first;
+        final filteredRecipes = visibleRecipes;
+        selectedRecipe = filteredRecipes.isEmpty ? null : filteredRecipes.first;
       }
     });
   }
@@ -333,6 +380,190 @@ class _StatPill extends StatelessWidget {
   }
 }
 
+class _BrewFocusCard extends StatelessWidget {
+  const _BrewFocusCard({required this.recipe});
+
+  final BrewRecipe? recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedRecipe = recipe;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: BrewColors.roast,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1F241915),
+            blurRadius: 28,
+            offset: Offset(0, 14),
+          ),
+        ],
+      ),
+      child: selectedRecipe == null
+          ? const Text(
+              'Tambahkan resep untuk mulai menyusun brew plan.',
+              style: TextStyle(color: BrewColors.cream, height: 1.35),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Brew plan',
+                  style: TextStyle(
+                    color: Color(0xCCFAF7F1),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  selectedRecipe.name,
+                  style: const TextStyle(
+                    color: BrewColors.cream,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _FocusMetric(
+                      icon: Icons.coffee_maker,
+                      label: selectedRecipe.method,
+                    ),
+                    _FocusMetric(
+                      icon: Icons.scale,
+                      label: selectedRecipe.ratioLabel,
+                    ),
+                    _FocusMetric(
+                      icon: Icons.thermostat,
+                      label: '${selectedRecipe.temperatureCelsius} C',
+                    ),
+                    _FocusMetric(
+                      icon: Icons.grain,
+                      label: selectedRecipe.grindSize,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class _FocusMetric extends StatelessWidget {
+  const _FocusMetric({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0x1AFFFFFF),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0x24FFFFFF)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: BrewColors.goldSoft),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: BrewColors.cream,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MethodFilterBar extends StatelessWidget {
+  const _MethodFilterBar({
+    required this.methods,
+    required this.selectedMethod,
+    required this.onSelected,
+  });
+
+  final List<String> methods;
+  final String selectedMethod;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final method in methods) ...[
+            _MethodFilterChip(
+              label: method,
+              isSelected: method == selectedMethod,
+              onTap: () => onSelected(method),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MethodFilterChip extends StatelessWidget {
+  const _MethodFilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: isSelected ? BrewColors.roast : BrewColors.surface,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? BrewColors.roast : BrewColors.line,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? BrewColors.cream : BrewColors.ink,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _RecipeList extends StatelessWidget {
   const _RecipeList({
     required this.recipes,
@@ -353,13 +584,26 @@ class _RecipeList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Pilih resep',
-          style: TextStyle(
-            color: BrewColors.ink,
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-          ),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Resep tersedia',
+                style: TextStyle(
+                  color: BrewColors.ink,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            Text(
+              '${recipes.length} item',
+              style: const TextStyle(
+                color: BrewColors.muted,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         SizedBox(
@@ -487,6 +731,7 @@ class RecipeCard extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   _MiniTag(recipe.method),
+                  _MiniTag(recipe.beanProfile.variety),
                   _MiniTag(recipe.ratioLabel),
                   _MiniTag(recipe.totalTimeLabel),
                   _MiniTag(recipe.difficulty),
@@ -572,20 +817,7 @@ class RecipeDetail extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          recipe.name,
-          style: const TextStyle(
-            color: BrewColors.ink,
-            fontSize: 26,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          recipe.description,
-          style: const TextStyle(color: BrewColors.muted, height: 1.45),
-        ),
+        _RecipeHero(recipe: recipe),
         const SizedBox(height: 16),
         _RecipeSpecs(recipe: recipe),
         const SizedBox(height: 16),
@@ -599,6 +831,74 @@ class RecipeDetail extends StatelessWidget {
         const SizedBox(height: 16),
         _TroubleshootingTips(tips: recipe.tips),
       ],
+    );
+  }
+}
+
+class _RecipeHero extends StatelessWidget {
+  const _RecipeHero({required this.recipe});
+
+  final BrewRecipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: BrewColors.warm,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: BrewColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: BrewColors.goldSoft,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.coffee,
+                  color: BrewColors.roast,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  recipe.name,
+                  style: const TextStyle(
+                    color: BrewColors.ink,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            recipe.description,
+            style: const TextStyle(color: BrewColors.muted, height: 1.45),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _MiniTag(recipe.beanProfile.process),
+              _MiniTag(recipe.beanProfile.roastLevel),
+              _MiniTag(recipe.beanProfile.origin),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
