@@ -10,8 +10,13 @@ void main() {
     await tester.pumpWidget(const ManualBrewApp());
 
     expect(find.text('Artisan Brew'), findsOneWidget);
+    expect(find.text('Selamat Pagi,\nCoffee Lover'), findsOneWidget);
     expect(find.text('V60 Balanced Daily Cup'), findsWidgets);
     expect(find.text('Kalita Sweet Cup'), findsOneWidget);
+
+    await tester.tap(find.text('Brew'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Kalkulator rasio'), findsOneWidget);
     expect(find.text('Profil biji kopi'), findsOneWidget);
     expect(find.text('Typica / Bourbon'), findsWidgets);
@@ -23,6 +28,8 @@ void main() {
 
     await tester.tap(find.text('AeroPress Quick Morning').first);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Brew'));
+    await tester.pumpAndSettle();
 
     expect(find.text('16 g kopi -> 224 g air'), findsOneWidget);
     expect(find.byIcon(Icons.restart_alt), findsOneWidget);
@@ -33,7 +40,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const ManualBrewApp());
 
-    await tester.tap(find.text('Tambah resep'));
+    await tester.tap(find.byTooltip('Tambah resep'));
     await tester.pumpAndSettle();
 
     expect(find.text('Pilih foto'), findsOneWidget);
@@ -75,6 +82,10 @@ void main() {
 
     expect(find.text('4 resep'), findsOneWidget);
     expect(find.text('Origami Honey Cup'), findsWidgets);
+
+    await tester.tap(find.text('Brew'));
+    await tester.pumpAndSettle();
+
     expect(find.text('20 g kopi -> 320 g air'), findsOneWidget);
     expect(find.text('Sweet honey, apple, clean finish'), findsOneWidget);
     expect(find.text('Custom'), findsOneWidget);
@@ -85,7 +96,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const ManualBrewApp());
 
-    await tester.tap(find.text('Tambah resep'));
+    await tester.tap(find.byTooltip('Tambah resep'));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -122,9 +133,15 @@ void main() {
     await tester.tap(find.text('Simpan'));
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Koleksi'));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.byTooltip('Hapus Origami Honey Cup'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Hapus'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Beranda'));
     await tester.pumpAndSettle();
 
     expect(find.text('3 resep'), findsOneWidget);
