@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -522,6 +522,7 @@ class _RecipePhotoFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     final resolvedImagePath = imagePath?.trim();
     final hasImage = resolvedImagePath != null && resolvedImagePath.isNotEmpty;
+    final imageFile = hasImage ? XFile(resolvedImagePath) : null;
 
     return Container(
       height: height,
@@ -537,11 +538,24 @@ class _RecipePhotoFrame extends StatelessWidget {
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(resolvedImagePath),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return _PhotoPlaceholder(label: label, compact: compact);
+                child: FutureBuilder<Uint8List>(
+                  future: imageFile!.readAsBytes(),
+                  builder: (context, snapshot) {
+                    final bytes = snapshot.data;
+                    if (bytes == null) {
+                      return _PhotoPlaceholder(label: label, compact: compact);
+                    }
+
+                    return Image.memory(
+                      bytes,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _PhotoPlaceholder(
+                          label: label,
+                          compact: compact,
+                        );
+                      },
+                    );
                   },
                 ),
               ),
@@ -1918,6 +1932,10 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
       return;
     }
 
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       selectedPhotoPath = photo.path;
     });
@@ -2013,9 +2031,7 @@ class _PhotoPickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fileName = photoPath == null
-        ? null
-        : photoPath!.split(Platform.pathSeparator).last;
+    final fileName = photoPath == null ? null : XFile(photoPath!).name;
 
     return Container(
       width: double.infinity,
