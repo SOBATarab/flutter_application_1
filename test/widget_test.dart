@@ -36,6 +36,8 @@ void main() {
     await tester.tap(find.text('Tambah resep'));
     await tester.pumpAndSettle();
 
+    expect(find.text('URL foto (opsional)'), findsOneWidget);
+
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Nama resep'),
       'Origami Honey Cup',

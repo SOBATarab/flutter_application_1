@@ -418,6 +418,7 @@ class _BrewFocusCard extends StatelessWidget {
               children: [
                 _RecipePhotoFrame(
                   label: selectedRecipe.photoHint,
+                  imageUrl: selectedRecipe.photoUrl,
                   height: 118,
                 ),
                 const SizedBox(height: 14),
@@ -505,16 +506,21 @@ class _FocusMetric extends StatelessWidget {
 class _RecipePhotoFrame extends StatelessWidget {
   const _RecipePhotoFrame({
     required this.label,
+    this.imageUrl,
     this.height = 150,
     this.compact = false,
   });
 
   final String label;
+  final String? imageUrl;
   final double height;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedImageUrl = imageUrl?.trim();
+    final hasImage = resolvedImageUrl != null && resolvedImageUrl.isNotEmpty;
+
     return Container(
       height: height,
       width: double.infinity,
@@ -525,56 +531,101 @@ class _RecipePhotoFrame extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
+          if (hasImage)
+            Positioned.fill(
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF37251B),
-                    Color(0xFF18110D),
-                    Color(0xFF2C382A),
-                  ],
+                child: Image.network(
+                  resolvedImageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return _PhotoPlaceholder(label: label, compact: compact);
+                  },
+                ),
+              ),
+            )
+          else
+            Positioned.fill(
+              child: _PhotoPlaceholder(label: label, compact: compact),
+            ),
+          if (hasImage)
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x00000000),
+                      Color(0x66000000),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.add_photo_alternate_outlined,
-                  color: BrewColors.goldSoft,
-                  size: compact ? 24 : 34,
-                ),
-                SizedBox(height: compact ? 4 : 8),
-                Text(
-                  compact ? 'Foto' : label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: BrewColors.cream,
-                    fontSize: compact ? 12 : 14,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                if (!compact) ...[
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Tambahkan foto sendiri',
-                    style: TextStyle(
-                      color: BrewColors.muted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _PhotoPlaceholder extends StatelessWidget {
+  const _PhotoPlaceholder({
+    required this.label,
+    required this.compact,
+  });
+
+  final String label;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF37251B),
+            Color(0xFF18110D),
+            Color(0xFF2C382A),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.add_photo_alternate_outlined,
+              color: BrewColors.goldSoft,
+              size: compact ? 24 : 34,
+            ),
+            SizedBox(height: compact ? 4 : 8),
+            Text(
+              compact ? 'Foto' : label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: BrewColors.cream,
+                fontSize: compact ? 12 : 14,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            if (!compact) ...[
+              const SizedBox(height: 4),
+              const Text(
+                'Tambahkan foto sendiri',
+                style: TextStyle(
+                  color: BrewColors.muted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -783,6 +834,7 @@ class RecipeCard extends StatelessWidget {
             children: [
               _RecipePhotoFrame(
                 label: recipe.photoHint,
+                imageUrl: recipe.photoUrl,
                 height: 88,
                 compact: true,
               ),
@@ -948,6 +1000,7 @@ class _RecipeHero extends StatelessWidget {
         children: [
           _RecipePhotoFrame(
             label: recipe.photoHint,
+            imageUrl: recipe.photoUrl,
             height: 180,
           ),
           const SizedBox(height: 14),
@@ -1557,6 +1610,7 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
   final temperatureController = TextEditingController(text: '92');
   final grindController = TextEditingController(text: 'Medium fine');
   final flavorController = TextEditingController();
+  final photoUrlController = TextEditingController();
   final varietyController = TextEditingController(text: 'Arabica');
   final processController = TextEditingController(text: 'Washed');
   final roastController = TextEditingController(text: 'Medium light');
@@ -1573,6 +1627,7 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
     temperatureController.dispose();
     grindController.dispose();
     flavorController.dispose();
+    photoUrlController.dispose();
     varietyController.dispose();
     processController.dispose();
     roastController.dispose();
@@ -1673,6 +1728,13 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
                 label: 'Profil rasa',
                 icon: Icons.spa,
                 validator: _requiredValidator,
+              ),
+              _TextInput(
+                controller: photoUrlController,
+                label: 'URL foto (opsional)',
+                icon: Icons.add_photo_alternate_outlined,
+                keyboardType: TextInputType.url,
+                validator: _optionalUrlValidator,
               ),
               const SizedBox(height: 6),
               const Text(
@@ -1783,6 +1845,7 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
         grindSize: grindController.text.trim(),
         totalTimeSeconds: 180,
         flavorProfile: flavorController.text.trim(),
+        photoUrl: _cleanOptionalText(photoUrlController.text),
         photoHint:
             'Foto ${methodController.text.trim()} ${nameController.text.trim()}',
         beanProfile: CoffeeBeanProfile(
@@ -1843,6 +1906,25 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
     }
 
     return null;
+  }
+
+  String? _optionalUrlValidator(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) {
+      return null;
+    }
+
+    final uri = Uri.tryParse(text);
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+      return 'Masukkan URL valid';
+    }
+
+    return null;
+  }
+
+  String? _cleanOptionalText(String value) {
+    final text = value.trim();
+    return text.isEmpty ? null : text;
   }
 
   String _temperatureHint(int temperature) {
@@ -1929,6 +2011,7 @@ class BrewRecipe {
     required this.grindSize,
     required this.totalTimeSeconds,
     required this.flavorProfile,
+    this.photoUrl,
     required this.photoHint,
     required this.beanProfile,
     required this.steps,
@@ -1946,6 +2029,7 @@ class BrewRecipe {
   final String grindSize;
   final int totalTimeSeconds;
   final String flavorProfile;
+  final String? photoUrl;
   final String photoHint;
   final CoffeeBeanProfile beanProfile;
   final List<BrewStep> steps;
