@@ -189,22 +189,33 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
             _CollectionView(
               recipes: allRecipes,
               selectedRecipe: selectedRecipe,
-              onSelected: _selectRecipe,
+              onSelected: _openBrew,
               onAddRecipe: _showAddRecipeForm,
               onDeleteRecipe: _confirmDeleteRecipe,
+              onSearch: _showRecipeSearch,
+              onBookmark: (recipe) {
+                _selectRecipe(recipe);
+                _showMessage('${recipe.name} disimpan ke koleksi.');
+              },
             ),
           ),
         ],
       3 => [
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 18, 20, 24),
-            _ProfileView(recipeCount: allRecipes.length),
+            _ProfileView(
+              recipeCount: allRecipes.length,
+              onMenuSelected: _showMessage,
+            ),
           ),
         ],
       _ => [
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 18, 20, 6),
-            const _Header(),
+            _Header(
+              onSearch: _showRecipeSearch,
+              onSettings: () => _showMessage('Settings siap dikembangkan.'),
+            ),
           ),
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 0, 20, 6),
@@ -212,7 +223,10 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
           ),
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 10, 20, 2),
-            _BrewFocusCard(recipe: selectedRecipe),
+            _BrewFocusCard(
+              recipe: selectedRecipe,
+              onStartBrew: () => _openBrew(selectedRecipe),
+            ),
           ),
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 18, 20, 4),
@@ -220,15 +234,20 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
               recipes: allRecipes,
               selectedMethod: selectedMethod,
               onSelected: _selectMethod,
+              onViewAll: _openCollection,
             ),
           ),
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 14, 20, 24),
             _LatestRecipesSection(
-              recipes: allRecipes,
+              recipes: visibleRecipes,
               selectedRecipe: selectedRecipe,
-              onSelected: _selectRecipe,
+              onSelected: _openBrew,
               onAddRecipe: _showAddRecipeForm,
+              onBookmark: (recipe) {
+                _selectRecipe(recipe);
+                _showMessage('${recipe.name} disimpan ke koleksi.');
+              },
             ),
           ),
         ],
@@ -258,6 +277,59 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
         selectedRecipe = filteredRecipes.isEmpty ? null : filteredRecipes.first;
       }
     });
+  }
+
+  void _openBrew(BrewRecipe? recipe) {
+    if (recipe == null) {
+      _showMessage('Tambahkan resep dulu untuk mulai seduh.');
+      return;
+    }
+
+    setState(() {
+      selectedRecipe = recipe;
+      activeTab = 1;
+    });
+  }
+
+  void _openCollection() {
+    setState(() {
+      selectedMethod = 'Semua';
+      activeTab = 2;
+    });
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _showRecipeSearch() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cari resep'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final recipe in allRecipes)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.local_cafe),
+                  title: Text(recipe.name),
+                  subtitle: Text(recipe.method),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _openBrew(recipe);
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _showAddRecipeForm() async {
@@ -314,7 +386,13 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header();
+  const _Header({
+    required this.onSearch,
+    required this.onSettings,
+  });
+
+  final VoidCallback onSearch;
+  final VoidCallback onSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -346,33 +424,50 @@ class _Header extends StatelessWidget {
             ),
           ),
         ),
-        _HeaderIcon(icon: Icons.search, tooltip: 'Cari resep'),
+        _HeaderIcon(
+          icon: Icons.search,
+          tooltip: 'Cari resep',
+          onTap: onSearch,
+        ),
         const SizedBox(width: 8),
-        _HeaderIcon(icon: Icons.notifications_none, tooltip: 'Notifikasi'),
+        _HeaderIcon(
+          icon: Icons.settings_outlined,
+          tooltip: 'Settings',
+          onTap: onSettings,
+        ),
       ],
     );
   }
 }
 
 class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon({required this.icon, required this.tooltip});
+  const _HeaderIcon({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String tooltip;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: BrewColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: BrewColors.line),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: BrewColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: BrewColors.line),
+          ),
+          child: Icon(icon, color: BrewColors.muted, size: 18),
         ),
-        child: Icon(icon, color: BrewColors.muted, size: 18),
       ),
     );
   }
@@ -590,9 +685,13 @@ class _NavItem extends StatelessWidget {
 }
 
 class _BrewFocusCard extends StatelessWidget {
-  const _BrewFocusCard({required this.recipe});
+  const _BrewFocusCard({
+    required this.recipe,
+    required this.onStartBrew,
+  });
 
   final BrewRecipe? recipe;
+  final VoidCallback onStartBrew;
 
   @override
   Widget build(BuildContext context) {
@@ -698,7 +797,7 @@ class _BrewFocusCard extends StatelessWidget {
                         SizedBox(
                           width: 148,
                           child: FilledButton(
-                            onPressed: () {},
+                            onPressed: onStartBrew,
                             child: const Text('Start Brew'),
                           ),
                         ),
@@ -936,11 +1035,13 @@ class _BrewMethodsSection extends StatelessWidget {
     required this.recipes,
     required this.selectedMethod,
     required this.onSelected,
+    required this.onViewAll,
   });
 
   final List<BrewRecipe> recipes;
   final String selectedMethod;
   final ValueChanged<String> onSelected;
+  final VoidCallback onViewAll;
 
   @override
   Widget build(BuildContext context) {
@@ -963,7 +1064,7 @@ class _BrewMethodsSection extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () => onSelected('Semua'),
+              onPressed: onViewAll,
               child: const Text('View all'),
             ),
           ],
@@ -1068,12 +1169,14 @@ class _LatestRecipesSection extends StatelessWidget {
     required this.selectedRecipe,
     required this.onSelected,
     required this.onAddRecipe,
+    required this.onBookmark,
   });
 
   final List<BrewRecipe> recipes;
   final BrewRecipe? selectedRecipe;
   final ValueChanged<BrewRecipe> onSelected;
   final VoidCallback onAddRecipe;
+  final ValueChanged<BrewRecipe> onBookmark;
 
   @override
   Widget build(BuildContext context) {
@@ -1119,6 +1222,7 @@ class _LatestRecipesSection extends StatelessWidget {
                 recipe: recipe,
                 isSelected: recipe == selectedRecipe,
                 onTap: () => onSelected(recipe),
+                onBookmark: () => onBookmark(recipe),
               );
             },
           ),
@@ -1133,11 +1237,13 @@ class _LatestRecipeCard extends StatelessWidget {
     required this.recipe,
     required this.isSelected,
     required this.onTap,
+    required this.onBookmark,
   });
 
   final BrewRecipe recipe;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback onBookmark;
 
   @override
   Widget build(BuildContext context) {
@@ -1223,12 +1329,16 @@ class _LatestRecipeCard extends StatelessWidget {
                               ),
                             ),
                             const Spacer(),
-                            Icon(
-                              isSelected
-                                  ? Icons.bookmark
-                                  : Icons.bookmark_border,
+                            IconButton(
+                              onPressed: onBookmark,
+                              icon: Icon(
+                                isSelected
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                              ),
                               color: BrewColors.goldSoft,
-                              size: 19,
+                              visualDensity: VisualDensity.compact,
+                              tooltip: 'Simpan ${recipe.name}',
                             ),
                           ],
                         ),
@@ -1278,6 +1388,8 @@ class _CollectionView extends StatelessWidget {
     required this.onSelected,
     required this.onAddRecipe,
     required this.onDeleteRecipe,
+    required this.onSearch,
+    required this.onBookmark,
   });
 
   final List<BrewRecipe> recipes;
@@ -1285,6 +1397,8 @@ class _CollectionView extends StatelessWidget {
   final ValueChanged<BrewRecipe> onSelected;
   final VoidCallback onAddRecipe;
   final ValueChanged<BrewRecipe> onDeleteRecipe;
+  final VoidCallback onSearch;
+  final ValueChanged<BrewRecipe> onBookmark;
 
   @override
   Widget build(BuildContext context) {
@@ -1299,6 +1413,7 @@ class _CollectionView extends StatelessWidget {
         const SizedBox(height: 16),
         TextField(
           readOnly: true,
+          onTap: onSearch,
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.search),
             hintText: 'Cari resep atau catatan...',
@@ -1320,6 +1435,7 @@ class _CollectionView extends StatelessWidget {
               isSelected: recipe == selectedRecipe,
               onTap: () => onSelected(recipe),
               onDelete: () => onDeleteRecipe(recipe),
+              onBookmark: () => onBookmark(recipe),
             ),
             const SizedBox(height: 12),
           ],
@@ -1334,12 +1450,14 @@ class _CollectionRecipeTile extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     required this.onDelete,
+    required this.onBookmark,
   });
 
   final BrewRecipe recipe;
   final bool isSelected;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback onBookmark;
 
   @override
   Widget build(BuildContext context) {
@@ -1414,10 +1532,14 @@ class _CollectionRecipeTile extends StatelessWidget {
                           label: recipe.ratioLabel,
                         ),
                         const Spacer(),
-                        const Icon(
-                          Icons.bookmark_border,
+                        IconButton(
+                          onPressed: onBookmark,
+                          icon: Icon(
+                            isSelected ? Icons.bookmark : Icons.bookmark_border,
+                          ),
                           color: BrewColors.goldSoft,
-                          size: 18,
+                          visualDensity: VisualDensity.compact,
+                          tooltip: 'Simpan ${recipe.name}',
                         ),
                       ],
                     ),
@@ -1433,9 +1555,13 @@ class _CollectionRecipeTile extends StatelessWidget {
 }
 
 class _ProfileView extends StatelessWidget {
-  const _ProfileView({required this.recipeCount});
+  const _ProfileView({
+    required this.recipeCount,
+    required this.onMenuSelected,
+  });
 
   final int recipeCount;
+  final ValueChanged<String> onMenuSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -1524,16 +1650,37 @@ class _ProfileView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        const _ProfileMenu(icon: Icons.filter_alt_outlined, title: 'V60'),
-        const _ProfileMenu(icon: Icons.compress, title: 'AeroPress'),
-        const _ProfileMenu(icon: Icons.local_cafe_outlined, title: 'Chemex'),
+        _ProfileMenu(
+          icon: Icons.filter_alt_outlined,
+          title: 'V60',
+          onTap: () => onMenuSelected('Metode V60 dipilih.'),
+        ),
+        _ProfileMenu(
+          icon: Icons.compress,
+          title: 'AeroPress',
+          onTap: () => onMenuSelected('Metode AeroPress dipilih.'),
+        ),
+        _ProfileMenu(
+          icon: Icons.local_cafe_outlined,
+          title: 'Chemex',
+          onTap: () => onMenuSelected('Metode Chemex dipilih.'),
+        ),
         const SizedBox(height: 12),
-        const _ProfileMenu(icon: Icons.history, title: 'Riwayat Seduh'),
-        const _ProfileMenu(
+        _ProfileMenu(
+          icon: Icons.history,
+          title: 'Riwayat Seduh',
+          onTap: () => onMenuSelected('Riwayat seduh belum ada.'),
+        ),
+        _ProfileMenu(
           icon: Icons.workspace_premium_outlined,
           title: 'Badge Pencapaian',
+          onTap: () => onMenuSelected('Badge pencapaian siap ditambahkan.'),
         ),
-        const _ProfileMenu(icon: Icons.settings_outlined, title: 'Settings'),
+        _ProfileMenu(
+          icon: Icons.settings_outlined,
+          title: 'Settings',
+          onTap: () => onMenuSelected('Settings siap dikembangkan.'),
+        ),
       ],
     );
   }
@@ -1633,37 +1780,53 @@ class _ProfileStat extends StatelessWidget {
 }
 
 class _ProfileMenu extends StatelessWidget {
-  const _ProfileMenu({required this.icon, required this.title});
+  const _ProfileMenu({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String title;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: BrewColors.surface,
+      child: Material(
+        color: BrewColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: BrewColors.line),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: BrewColors.goldSoft, size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: BrewColors.ink,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: BrewColors.line),
             ),
-            const Icon(Icons.chevron_right, color: BrewColors.muted, size: 18),
-          ],
+            child: Row(
+              children: [
+                Icon(icon, color: BrewColors.goldSoft, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      color: BrewColors.ink,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  color: BrewColors.muted,
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
