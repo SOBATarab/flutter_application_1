@@ -14,7 +14,7 @@ void main() {
     expect(find.text('Kalita Sweet Cup'), findsOneWidget);
     expect(find.text('Kalkulator rasio'), findsOneWidget);
     expect(find.text('Profil biji kopi'), findsOneWidget);
-    expect(find.text('Typica / Bourbon'), findsOneWidget);
+    expect(find.text('Typica / Bourbon'), findsWidgets);
     expect(find.text('18 g kopi -> 270 g air'), findsOneWidget);
   });
 

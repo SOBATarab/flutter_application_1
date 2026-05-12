@@ -3,18 +3,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class BrewColors {
-  static const ink = Color(0xFF241915);
-  static const muted = Color(0xFF766B61);
-  static const cream = Color(0xFFFAF7F1);
-  static const surface = Color(0xFFFFFFFF);
-  static const line = Color(0xFFE8DED2);
-  static const sage = Color(0xFF63725F);
-  static const sageSoft = Color(0xFFEAF0E7);
-  static const caramel = Color(0xFFB77943);
-  static const roast = Color(0xFF4B3329);
-  static const danger = Color(0xFF9A4B3A);
-  static const warm = Color(0xFFFFFBF4);
-  static const goldSoft = Color(0xFFF4E7D2);
+  static const ink = Color(0xFFF7EFE5);
+  static const muted = Color(0xFFC1B4A8);
+  static const cream = Color(0xFFFAF2E8);
+  static const surface = Color(0xFF181310);
+  static const surfaceHigh = Color(0xFF211A16);
+  static const line = Color(0xFF3A3029);
+  static const sage = Color(0xFFA8B79B);
+  static const sageSoft = Color(0xFF2C382A);
+  static const caramel = Color(0xFFD89A5B);
+  static const roast = Color(0xFF0F0B09);
+  static const danger = Color(0xFFE39A87);
+  static const warm = Color(0xFF241B16);
+  static const goldSoft = Color(0xFFE6C99B);
+  static const photo = Color(0xFF2A211C);
 }
 
 void main() {
@@ -33,16 +35,16 @@ class ManualBrewApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: BrewColors.sage,
-          brightness: Brightness.light,
-          primary: BrewColors.roast,
+          brightness: Brightness.dark,
+          primary: BrewColors.goldSoft,
           secondary: BrewColors.sage,
-          surface: BrewColors.cream,
+          surface: BrewColors.surface,
         ),
-        scaffoldBackgroundColor: BrewColors.cream,
+        scaffoldBackgroundColor: BrewColors.roast,
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            backgroundColor: BrewColors.roast,
-            foregroundColor: BrewColors.cream,
+            backgroundColor: BrewColors.goldSoft,
+            foregroundColor: BrewColors.roast,
             minimumSize: const Size(0, 46),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -51,7 +53,7 @@ class ManualBrewApp extends StatelessWidget {
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: BrewColors.roast,
+            foregroundColor: BrewColors.ink,
             side: const BorderSide(color: BrewColors.line),
             minimumSize: const Size(0, 46),
             shape: RoundedRectangleBorder(
@@ -61,8 +63,9 @@ class ManualBrewApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: BrewColors.surface,
+          fillColor: BrewColors.surfaceHigh,
           prefixIconColor: BrewColors.sage,
+          labelStyle: const TextStyle(color: BrewColors.muted),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: BrewColors.line),
@@ -131,8 +134,9 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFBF8F2),
-              Color(0xFFF3EEE5),
+              Color(0xFF090706),
+              Color(0xFF15100D),
+              Color(0xFF211813),
             ],
           ),
         ),
@@ -412,6 +416,11 @@ class _BrewFocusCard extends StatelessWidget {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _RecipePhotoFrame(
+                  label: selectedRecipe.photoHint,
+                  height: 118,
+                ),
+                const SizedBox(height: 14),
                 const Text(
                   'Brew plan',
                   style: TextStyle(
@@ -485,6 +494,84 @@ class _FocusMetric extends StatelessWidget {
               color: BrewColors.cream,
               fontSize: 12,
               fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecipePhotoFrame extends StatelessWidget {
+  const _RecipePhotoFrame({
+    required this.label,
+    this.height = 150,
+    this.compact = false,
+  });
+
+  final String label;
+  final double height;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: BrewColors.photo,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: BrewColors.line),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF37251B),
+                    Color(0xFF18110D),
+                    Color(0xFF2C382A),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.add_photo_alternate_outlined,
+                  color: BrewColors.goldSoft,
+                  size: compact ? 24 : 34,
+                ),
+                SizedBox(height: compact ? 4 : 8),
+                Text(
+                  compact ? 'Foto' : label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: BrewColors.cream,
+                    fontSize: compact ? 12 : 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                if (!compact) ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Tambahkan foto sendiri',
+                    style: TextStyle(
+                      color: BrewColors.muted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -670,7 +757,7 @@ class RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isSelected ? const Color(0xFFFFFBF4) : BrewColors.surface,
+      color: isSelected ? BrewColors.warm : BrewColors.surface,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -694,6 +781,12 @@ class RecipeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _RecipePhotoFrame(
+                label: recipe.photoHint,
+                height: 88,
+                compact: true,
+              ),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -761,7 +854,7 @@ class _MiniTag extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(
-          color: BrewColors.roast,
+          color: BrewColors.ink,
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
@@ -853,6 +946,11 @@ class _RecipeHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _RecipePhotoFrame(
+            label: recipe.photoHint,
+            height: 180,
+          ),
+          const SizedBox(height: 14),
           Row(
             children: [
               Container(
@@ -1685,6 +1783,8 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
         grindSize: grindController.text.trim(),
         totalTimeSeconds: 180,
         flavorProfile: flavorController.text.trim(),
+        photoHint:
+            'Foto ${methodController.text.trim()} ${nameController.text.trim()}',
         beanProfile: CoffeeBeanProfile(
           variety: varietyController.text.trim(),
           process: processController.text.trim(),
@@ -1829,6 +1929,7 @@ class BrewRecipe {
     required this.grindSize,
     required this.totalTimeSeconds,
     required this.flavorProfile,
+    required this.photoHint,
     required this.beanProfile,
     required this.steps,
     required this.tips,
@@ -1845,6 +1946,7 @@ class BrewRecipe {
   final String grindSize;
   final int totalTimeSeconds;
   final String flavorProfile;
+  final String photoHint;
   final CoffeeBeanProfile beanProfile;
   final List<BrewStep> steps;
   final List<String> tips;
@@ -1901,6 +2003,7 @@ const recipes = [
     grindSize: 'Medium fine',
     totalTimeSeconds: 180,
     flavorProfile: 'Sweet, clean, citrus ringan',
+    photoHint: 'Foto V60 pour over',
     beanProfile: CoffeeBeanProfile(
       variety: 'Typica / Bourbon',
       process: 'Washed',
@@ -1954,6 +2057,7 @@ const recipes = [
     grindSize: 'Medium',
     totalTimeSeconds: 210,
     flavorProfile: 'Caramel, round, soft acidity',
+    photoHint: 'Foto Kalita dripper',
     beanProfile: CoffeeBeanProfile(
       variety: 'Caturra / Catuai',
       process: 'Honey',
@@ -2007,6 +2111,7 @@ const recipes = [
     grindSize: 'Medium fine',
     totalTimeSeconds: 120,
     flavorProfile: 'Bold, sweet, low bitterness',
+    photoHint: 'Foto AeroPress brew',
     beanProfile: CoffeeBeanProfile(
       variety: 'Heirloom / Mixed cultivar',
       process: 'Natural',
