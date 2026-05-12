@@ -9,7 +9,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const ManualBrewApp());
 
-    expect(find.text('Manual Brew'), findsOneWidget);
+    expect(find.text('Artisan Brew'), findsOneWidget);
     expect(find.text('V60 Balanced Daily Cup'), findsWidgets);
     expect(find.text('Kalita Sweet Cup'), findsOneWidget);
     expect(find.text('Kalkulator rasio'), findsOneWidget);

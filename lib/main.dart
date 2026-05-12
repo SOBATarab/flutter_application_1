@@ -32,7 +32,7 @@ class ManualBrewApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Manual Brew',
+      title: 'Artisan Brew',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -130,6 +130,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
     final isWide = MediaQuery.sizeOf(context).width >= 760;
 
     return Scaffold(
+      bottomNavigationBar: const _ArtisanBottomNav(),
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -142,75 +143,88 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
             ],
           ),
         ),
-        child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-                  child: _Header(recipeCount: allRecipes.length),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                  child: _BrewFocusCard(recipe: selectedRecipe),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 2),
-                  child: _MethodFilterBar(
-                    methods: methodFilters,
-                    selectedMethod: selectedMethod,
-                    onSelected: _selectMethod,
+        child: CustomPaint(
+          painter: _DotGridPainter(),
+          child: SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+                    child: _Header(recipeCount: allRecipes.length),
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: isWide
-                    ? Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _RecipeList(
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                    child: _BrewFocusCard(recipe: selectedRecipe),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
+                    child: _BrewMethodsSection(
+                      recipes: allRecipes,
+                      selectedMethod: selectedMethod,
+                      onSelected: _selectMethod,
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 2),
+                    child: _MethodFilterBar(
+                      methods: methodFilters,
+                      selectedMethod: selectedMethod,
+                      onSelected: _selectMethod,
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: isWide
+                      ? Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: _RecipeList(
+                                  recipes: visibleRecipes,
+                                  selectedRecipe: selectedRecipe,
+                                  onSelected: _selectRecipe,
+                                  onAddRecipe: _showAddRecipeForm,
+                                  onDeleteRecipe: _confirmDeleteRecipe,
+                                ),
+                              ),
+                              const SizedBox(width: 18),
+                              Expanded(
+                                child: _SelectedRecipeDetail(
+                                  recipe: selectedRecipe,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _RecipeList(
                                 recipes: visibleRecipes,
                                 selectedRecipe: selectedRecipe,
                                 onSelected: _selectRecipe,
                                 onAddRecipe: _showAddRecipeForm,
                                 onDeleteRecipe: _confirmDeleteRecipe,
                               ),
-                            ),
-                            const SizedBox(width: 18),
-                            Expanded(
-                              child: _SelectedRecipeDetail(
-                                recipe: selectedRecipe,
-                              ),
-                            ),
-                          ],
+                              const SizedBox(height: 18),
+                              _SelectedRecipeDetail(recipe: selectedRecipe),
+                            ],
+                          ),
                         ),
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _RecipeList(
-                              recipes: visibleRecipes,
-                              selectedRecipe: selectedRecipe,
-                              onSelected: _selectRecipe,
-                              onAddRecipe: _showAddRecipeForm,
-                              onDeleteRecipe: _confirmDeleteRecipe,
-                            ),
-                            const SizedBox(height: 18),
-                            _SelectedRecipeDetail(recipe: selectedRecipe),
-                          ],
-                        ),
-                      ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -321,7 +335,7 @@ class _Header extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Manual Brew',
+                    'Artisan Brew',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
@@ -330,7 +344,7 @@ class _Header extends StatelessWidget {
                   ),
                   SizedBox(height: 2),
                   Text(
-                    'Resep kopi yang tenang, rapi, dan mudah diulang',
+                    'Manual brew recipes for slow coffee rituals',
                     style: TextStyle(color: BrewColors.muted),
                   ),
                 ],
@@ -349,6 +363,112 @@ class _Header extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _DotGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0x1FFFFFFF)
+      ..style = PaintingStyle.fill;
+
+    const spacing = 22.0;
+    for (double x = 0; x < size.width; x += spacing) {
+      for (double y = 0; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), 1.15, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _ArtisanBottomNav extends StatelessWidget {
+  const _ArtisanBottomNav();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 72,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: BrewColors.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: BrewColors.line),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x66000000),
+              blurRadius: 22,
+              offset: Offset(0, 12),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _NavItem(
+              icon: Icons.explore_outlined,
+              label: 'Explore',
+              active: true,
+            ),
+            _NavItem(icon: Icons.timer_outlined, label: 'Brew'),
+            _NavItem(
+              icon: Icons.collections_bookmark_outlined,
+              label: 'Collection',
+            ),
+            _NavItem(icon: Icons.person_outline, label: 'Profile'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    this.active = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? BrewColors.goldSoft : BrewColors.muted;
+    return Expanded(
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFF3A2A1C) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -397,7 +517,6 @@ class _BrewFocusCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: BrewColors.roast,
         borderRadius: BorderRadius.circular(8),
@@ -411,62 +530,122 @@ class _BrewFocusCard extends StatelessWidget {
         ],
       ),
       child: selectedRecipe == null
-          ? const Text(
-              'Tambahkan resep untuk mulai menyusun brew plan.',
-              style: TextStyle(color: BrewColors.cream, height: 1.35),
+          ? const Padding(
+              padding: EdgeInsets.all(18),
+              child: Text(
+                'Tambahkan resep untuk mulai menyusun brew plan.',
+                style: TextStyle(color: BrewColors.cream, height: 1.35),
+              ),
             )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _RecipePhotoFrame(
-                  label: selectedRecipe.photoHint,
-                  imagePath: selectedRecipe.photoPath,
-                  height: 118,
-                ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Brew plan',
-                  style: TextStyle(
-                    color: Color(0xCCFAF7F1),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+          : ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                children: [
+                  _RecipePhotoFrame(
+                    label: selectedRecipe.photoHint,
+                    imagePath: selectedRecipe.photoPath,
+                    height: 232,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  selectedRecipe.name,
-                  style: const TextStyle(
-                    color: BrewColors.cream,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0,
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.08),
+                            Colors.black.withValues(alpha: 0.72),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _FocusMetric(
-                      icon: Icons.coffee_maker,
-                      label: selectedRecipe.method,
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 16,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _HeroBadge(label: 'ARTISAN BREW'),
+                        const SizedBox(height: 10),
+                        Text(
+                          selectedRecipe.name,
+                          style: const TextStyle(
+                            color: BrewColors.cream,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          selectedRecipe.flavorProfile,
+                          style: const TextStyle(
+                            color: BrewColors.muted,
+                            height: 1.35,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _FocusMetric(
+                              icon: Icons.coffee_maker,
+                              label: selectedRecipe.method,
+                            ),
+                            _FocusMetric(
+                              icon: Icons.scale,
+                              label: selectedRecipe.ratioLabel,
+                            ),
+                            _FocusMetric(
+                              icon: Icons.thermostat,
+                              label:
+                                  '${selectedRecipe.temperatureCelsius} C',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: 132,
+                          child: FilledButton(
+                            onPressed: () {},
+                            child: const Text('Start Brew'),
+                          ),
+                        ),
+                      ],
                     ),
-                    _FocusMetric(
-                      icon: Icons.scale,
-                      label: selectedRecipe.ratioLabel,
-                    ),
-                    _FocusMetric(
-                      icon: Icons.thermostat,
-                      label: '${selectedRecipe.temperatureCelsius} C',
-                    ),
-                    _FocusMetric(
-                      icon: Icons.grain,
-                      label: selectedRecipe.grindSize,
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
+    );
+  }
+}
+
+class _HeroBadge extends StatelessWidget {
+  const _HeroBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: BrewColors.goldSoft,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: BrewColors.roast,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
     );
   }
 }
@@ -675,6 +854,132 @@ class _MethodFilterBar extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _BrewMethodsSection extends StatelessWidget {
+  const _BrewMethodsSection({
+    required this.recipes,
+    required this.selectedMethod,
+    required this.onSelected,
+  });
+
+  final List<BrewRecipe> recipes;
+  final String selectedMethod;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final methods = recipes.map((recipe) => recipe.method).toSet().toList()
+      ..sort();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Brew Methods',
+                style: TextStyle(
+                  color: BrewColors.ink,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => onSelected('Semua'),
+              child: const Text('View all'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        GridView.builder(
+          itemCount: methods.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 150,
+            mainAxisExtent: 92,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+          ),
+          itemBuilder: (context, index) {
+            final method = methods[index];
+            final isSelected = selectedMethod == method;
+            final count = recipes
+                .where((recipe) => recipe.method == method)
+                .length;
+
+            return Material(
+              color: isSelected ? const Color(0xFF3A2A1C) : BrewColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => onSelected(method),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected ? BrewColors.goldSoft : BrewColors.line,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(
+                        _methodIcon(method),
+                        color: isSelected ? BrewColors.goldSoft : BrewColors.sage,
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            method,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: BrewColors.ink,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          Text(
+                            '$count resep',
+                            style: const TextStyle(
+                              color: BrewColors.muted,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  IconData _methodIcon(String method) {
+    final lower = method.toLowerCase();
+    if (lower.contains('aero')) {
+      return Icons.compress;
+    }
+    if (lower.contains('kalita')) {
+      return Icons.filter_alt_outlined;
+    }
+    if (lower.contains('v60')) {
+      return Icons.coffee_maker_outlined;
+    }
+
+    return Icons.local_cafe_outlined;
   }
 }
 
