@@ -102,6 +102,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
   final List<BrewRecipe> allRecipes = List.of(recipes);
   BrewRecipe? selectedRecipe;
   String selectedMethod = 'Semua';
+  int activeTab = 0;
 
   List<String> get methodFilters {
     final methods = allRecipes.map((recipe) => recipe.method).toSet().toList()
@@ -130,7 +131,10 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
     final isWide = MediaQuery.sizeOf(context).width >= 760;
 
     return Scaffold(
-      bottomNavigationBar: const _ArtisanBottomNav(),
+      bottomNavigationBar: _ArtisanBottomNav(
+        activeIndex: activeTab,
+        onSelected: (index) => setState(() => activeTab = index),
+      ),
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -147,86 +151,110 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
           painter: _DotGridPainter(),
           child: SafeArea(
             child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-                    child: _Header(recipeCount: allRecipes.length),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                    child: _BrewFocusCard(recipe: selectedRecipe),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
-                    child: _BrewMethodsSection(
-                      recipes: allRecipes,
-                      selectedMethod: selectedMethod,
-                      onSelected: _selectMethod,
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 2),
-                    child: _MethodFilterBar(
-                      methods: methodFilters,
-                      selectedMethod: selectedMethod,
-                      onSelected: _selectMethod,
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: isWide
-                      ? Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: _RecipeList(
-                                  recipes: visibleRecipes,
-                                  selectedRecipe: selectedRecipe,
-                                  onSelected: _selectRecipe,
-                                  onAddRecipe: _showAddRecipeForm,
-                                  onDeleteRecipe: _confirmDeleteRecipe,
-                                ),
-                              ),
-                              const SizedBox(width: 18),
-                              Expanded(
-                                child: _SelectedRecipeDetail(
-                                  recipe: selectedRecipe,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _RecipeList(
-                                recipes: visibleRecipes,
-                                selectedRecipe: selectedRecipe,
-                                onSelected: _selectRecipe,
-                                onAddRecipe: _showAddRecipeForm,
-                                onDeleteRecipe: _confirmDeleteRecipe,
-                              ),
-                              const SizedBox(height: 18),
-                              _SelectedRecipeDetail(recipe: selectedRecipe),
-                            ],
-                          ),
-                        ),
-                ),
-              ],
+              slivers: _tabSlivers(isWide),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  List<Widget> _tabSlivers(bool isWide) {
+    return switch (activeTab) {
+      1 => [
+          _contentSliver(
+            const EdgeInsets.fromLTRB(20, 18, 20, 24),
+            _SelectedRecipeDetail(recipe: selectedRecipe),
+          ),
+        ],
+      2 => [
+          _contentSliver(
+            const EdgeInsets.fromLTRB(20, 18, 20, 24),
+            _CollectionView(
+              recipes: allRecipes,
+              selectedRecipe: selectedRecipe,
+              onSelected: _selectRecipe,
+              onAddRecipe: _showAddRecipeForm,
+              onDeleteRecipe: _confirmDeleteRecipe,
+            ),
+          ),
+        ],
+      3 => [
+          _contentSliver(
+            const EdgeInsets.fromLTRB(20, 18, 20, 24),
+            _ProfileView(recipeCount: allRecipes.length),
+          ),
+        ],
+      _ => [
+          _contentSliver(
+            const EdgeInsets.fromLTRB(20, 18, 20, 8),
+            _Header(recipeCount: allRecipes.length),
+          ),
+          _contentSliver(
+            const EdgeInsets.fromLTRB(20, 12, 20, 4),
+            _BrewFocusCard(recipe: selectedRecipe),
+          ),
+          _contentSliver(
+            const EdgeInsets.fromLTRB(20, 18, 20, 4),
+            _BrewMethodsSection(
+              recipes: allRecipes,
+              selectedMethod: selectedMethod,
+              onSelected: _selectMethod,
+            ),
+          ),
+          _contentSliver(
+            const EdgeInsets.fromLTRB(20, 8, 20, 2),
+            _MethodFilterBar(
+              methods: methodFilters,
+              selectedMethod: selectedMethod,
+              onSelected: _selectMethod,
+            ),
+          ),
+          _contentSliver(
+            const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            isWide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _RecipeList(
+                          recipes: visibleRecipes,
+                          selectedRecipe: selectedRecipe,
+                          onSelected: _selectRecipe,
+                          onAddRecipe: _showAddRecipeForm,
+                          onDeleteRecipe: _confirmDeleteRecipe,
+                        ),
+                      ),
+                      const SizedBox(width: 18),
+                      Expanded(
+                        child: _SelectedRecipeDetail(recipe: selectedRecipe),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _RecipeList(
+                        recipes: visibleRecipes,
+                        selectedRecipe: selectedRecipe,
+                        onSelected: _selectRecipe,
+                        onAddRecipe: _showAddRecipeForm,
+                        onDeleteRecipe: _confirmDeleteRecipe,
+                      ),
+                      const SizedBox(height: 18),
+                      _SelectedRecipeDetail(recipe: selectedRecipe),
+                    ],
+                  ),
+          ),
+        ],
+    };
+  }
+
+  SliverToBoxAdapter _contentSliver(EdgeInsets padding, Widget child) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: padding,
+        child: child,
       ),
     );
   }
@@ -387,7 +415,13 @@ class _DotGridPainter extends CustomPainter {
 }
 
 class _ArtisanBottomNav extends StatelessWidget {
-  const _ArtisanBottomNav();
+  const _ArtisanBottomNav({
+    required this.activeIndex,
+    required this.onSelected,
+  });
+
+  final int activeIndex;
+  final ValueChanged<int> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -409,20 +443,33 @@ class _ArtisanBottomNav extends StatelessWidget {
             ),
           ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _NavItem(
               icon: Icons.explore_outlined,
               label: 'Explore',
-              active: true,
+              active: activeIndex == 0,
+              onTap: () => onSelected(0),
             ),
-            _NavItem(icon: Icons.timer_outlined, label: 'Brew'),
+            _NavItem(
+              icon: Icons.timer_outlined,
+              label: 'Brew',
+              active: activeIndex == 1,
+              onTap: () => onSelected(1),
+            ),
             _NavItem(
               icon: Icons.collections_bookmark_outlined,
               label: 'Collection',
+              active: activeIndex == 2,
+              onTap: () => onSelected(2),
             ),
-            _NavItem(icon: Icons.person_outline, label: 'Profile'),
+            _NavItem(
+              icon: Icons.person_outline,
+              label: 'Profile',
+              active: activeIndex == 3,
+              onTap: () => onSelected(3),
+            ),
           ],
         ),
       ),
@@ -434,39 +481,45 @@ class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.icon,
     required this.label,
+    required this.onTap,
     this.active = false,
   });
 
   final IconData icon;
   final String label;
+  final VoidCallback onTap;
   final bool active;
 
   @override
   Widget build(BuildContext context) {
     final color = active ? BrewColors.goldSoft : BrewColors.muted;
     return Expanded(
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: active ? const Color(0xFF3A2A1C) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: color,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Container(
+          height: 50,
+          decoration: BoxDecoration(
+            color: active ? const Color(0xFF3A2A1C) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 18),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1017,6 +1070,289 @@ class _MethodFilterChip extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CollectionView extends StatelessWidget {
+  const _CollectionView({
+    required this.recipes,
+    required this.selectedRecipe,
+    required this.onSelected,
+    required this.onAddRecipe,
+    required this.onDeleteRecipe,
+  });
+
+  final List<BrewRecipe> recipes;
+  final BrewRecipe? selectedRecipe;
+  final ValueChanged<BrewRecipe> onSelected;
+  final VoidCallback onAddRecipe;
+  final ValueChanged<BrewRecipe> onDeleteRecipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _ScreenTitle(
+          title: 'Koleksi Saya',
+          subtitle: 'Resep manual brew favorit dan catatan seduh.',
+          icon: Icons.collections_bookmark_outlined,
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          readOnly: true,
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search),
+            hintText: 'Cari resep atau catatan...',
+            hintStyle: const TextStyle(color: BrewColors.muted),
+            suffixIcon: IconButton(
+              onPressed: onAddRecipe,
+              icon: const Icon(Icons.add),
+              tooltip: 'Tambah resep',
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        _RecipeList(
+          recipes: recipes,
+          selectedRecipe: selectedRecipe,
+          onSelected: onSelected,
+          onAddRecipe: onAddRecipe,
+          onDeleteRecipe: onDeleteRecipe,
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileView extends StatelessWidget {
+  const _ProfileView({required this.recipeCount});
+
+  final int recipeCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _ScreenTitle(
+          title: 'Profil Pengguna',
+          subtitle: 'Manual brewer dan pencatat ritual kopi.',
+          icon: Icons.person_outline,
+        ),
+        const SizedBox(height: 18),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: BrewColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: BrewColors.line),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 86,
+                height: 86,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: BrewColors.warm,
+                  border: Border.all(color: BrewColors.goldSoft, width: 1.4),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: BrewColors.goldSoft,
+                  size: 42,
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Andi Seduh',
+                style: TextStyle(
+                  color: BrewColors.cream,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Home Brewer & Filter Coffee Lover',
+                style: TextStyle(
+                  color: BrewColors.goldSoft,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ProfileStat(
+                      label: 'Total resep',
+                      value: '$recipeCount',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: _ProfileStat(label: 'Koleksi', value: '12'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          'Metode Favorit',
+          style: TextStyle(
+            color: BrewColors.ink,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 10),
+        const _ProfileMenu(icon: Icons.filter_alt_outlined, title: 'V60'),
+        const _ProfileMenu(icon: Icons.compress, title: 'AeroPress'),
+        const _ProfileMenu(icon: Icons.local_cafe_outlined, title: 'Chemex'),
+        const SizedBox(height: 12),
+        const _ProfileMenu(icon: Icons.history, title: 'Riwayat Seduh'),
+        const _ProfileMenu(
+          icon: Icons.workspace_premium_outlined,
+          title: 'Badge Pencapaian',
+        ),
+        const _ProfileMenu(icon: Icons.settings_outlined, title: 'Settings'),
+      ],
+    );
+  }
+}
+
+class _ScreenTitle extends StatelessWidget {
+  const _ScreenTitle({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: BrewColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: BrewColors.line),
+          ),
+          child: Icon(icon, color: BrewColors.goldSoft),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: BrewColors.cream,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: const TextStyle(color: BrewColors.muted, height: 1.35),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileStat extends StatelessWidget {
+  const _ProfileStat({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+      decoration: BoxDecoration(
+        color: BrewColors.warm,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: BrewColors.line),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              color: BrewColors.goldSoft,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: BrewColors.muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileMenu extends StatelessWidget {
+  const _ProfileMenu({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: BrewColors.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: BrewColors.line),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: BrewColors.goldSoft, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: BrewColors.ink,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: BrewColors.muted, size: 18),
+          ],
         ),
       ),
     );
