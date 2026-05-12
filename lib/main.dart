@@ -589,6 +589,8 @@ class RecipeDetail extends StatelessWidget {
         const SizedBox(height: 16),
         _RecipeSpecs(recipe: recipe),
         const SizedBox(height: 16),
+        _BeanProfilePanel(profile: recipe.beanProfile),
+        const SizedBox(height: 16),
         RatioCalculator(recipe: recipe),
         const SizedBox(height: 16),
         BrewTimer(recipe: recipe),
@@ -688,6 +690,102 @@ class _SpecTile extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BeanProfilePanel extends StatelessWidget {
+  const _BeanProfilePanel({required this.profile});
+
+  final CoffeeBeanProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Panel(
+      title: 'Profil biji kopi',
+      icon: Icons.spa,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _MiniTag(profile.variety),
+              _MiniTag(profile.process),
+              _MiniTag(profile.roastLevel),
+              _MiniTag(profile.origin),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            profile.character,
+            style: const TextStyle(color: BrewColors.ink, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          _BeanGuidanceRow(
+            icon: Icons.thermostat,
+            label: 'Saran suhu',
+            value: profile.brewTemperatureHint,
+          ),
+          _BeanGuidanceRow(
+            icon: Icons.grain,
+            label: 'Saran grind',
+            value: profile.grindHint,
+          ),
+          _BeanGuidanceRow(
+            icon: Icons.water_drop,
+            label: 'Saran ekstraksi',
+            value: profile.extractionHint,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BeanGuidanceRow extends StatelessWidget {
+  const _BeanGuidanceRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: BrewColors.sage, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  color: BrewColors.muted,
+                  height: 1.35,
+                ),
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: const TextStyle(
+                      color: BrewColors.ink,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  TextSpan(text: value),
+                ],
+              ),
             ),
           ),
         ],
@@ -1061,6 +1159,11 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
   final temperatureController = TextEditingController(text: '92');
   final grindController = TextEditingController(text: 'Medium fine');
   final flavorController = TextEditingController();
+  final varietyController = TextEditingController(text: 'Arabica');
+  final processController = TextEditingController(text: 'Washed');
+  final roastController = TextEditingController(text: 'Medium light');
+  final originController = TextEditingController(text: 'Indonesia');
+  final beanCharacterController = TextEditingController();
 
   @override
   void dispose() {
@@ -1072,6 +1175,11 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
     temperatureController.dispose();
     grindController.dispose();
     flavorController.dispose();
+    varietyController.dispose();
+    processController.dispose();
+    roastController.dispose();
+    originController.dispose();
+    beanCharacterController.dispose();
     super.dispose();
   }
 
@@ -1168,6 +1276,65 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
                 icon: Icons.spa,
                 validator: _requiredValidator,
               ),
+              const SizedBox(height: 6),
+              const Text(
+                'Profil biji kopi',
+                style: TextStyle(
+                  color: BrewColors.ink,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _TextInput(
+                      controller: varietyController,
+                      label: 'Varietas',
+                      icon: Icons.eco,
+                      validator: _requiredValidator,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _TextInput(
+                      controller: processController,
+                      label: 'Proses',
+                      icon: Icons.bubble_chart,
+                      validator: _requiredValidator,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _TextInput(
+                      controller: roastController,
+                      label: 'Roast',
+                      icon: Icons.local_fire_department,
+                      validator: _requiredValidator,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _TextInput(
+                      controller: originController,
+                      label: 'Origin',
+                      icon: Icons.public,
+                      validator: _requiredValidator,
+                    ),
+                  ),
+                ],
+              ),
+              _TextInput(
+                controller: beanCharacterController,
+                label: 'Karakter biji',
+                icon: Icons.tune,
+                maxLines: 2,
+                validator: _requiredValidator,
+              ),
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -1218,6 +1385,16 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
         grindSize: grindController.text.trim(),
         totalTimeSeconds: 180,
         flavorProfile: flavorController.text.trim(),
+        beanProfile: CoffeeBeanProfile(
+          variety: varietyController.text.trim(),
+          process: processController.text.trim(),
+          roastLevel: roastController.text.trim(),
+          origin: originController.text.trim(),
+          character: beanCharacterController.text.trim(),
+          brewTemperatureHint: _temperatureHint(temperature),
+          grindHint: _grindHint(grindController.text.trim()),
+          extractionHint: _extractionHint(ratio),
+        ),
         steps: [
           BrewStep(
             title: 'Bloom',
@@ -1266,6 +1443,40 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
     }
 
     return null;
+  }
+
+  String _temperatureHint(int temperature) {
+    if (temperature <= 89) {
+      return 'Cocok untuk roast lebih gelap atau karakter mudah pahit.';
+    }
+    if (temperature >= 94) {
+      return 'Cocok untuk roast terang agar sweetness dan acidity keluar.';
+    }
+
+    return 'Rentang aman untuk cup seimbang dan mudah dikontrol.';
+  }
+
+  String _grindHint(String grindSize) {
+    final normalized = grindSize.toLowerCase();
+    if (normalized.contains('fine')) {
+      return 'Grind halus membantu ekstraksi, jaga pouring tetap lembut.';
+    }
+    if (normalized.contains('coarse')) {
+      return 'Grind kasar memberi body bersih, perhatikan agar tidak under.';
+    }
+
+    return 'Grind medium cocok untuk resep fleksibel dan konsisten.';
+  }
+
+  String _extractionHint(double ratio) {
+    if (ratio <= 14) {
+      return 'Rasio pekat, cocok untuk body tebal atau bypass setelah seduh.';
+    }
+    if (ratio >= 17) {
+      return 'Rasio lebih ringan, cocok untuk karakter floral dan clean.';
+    }
+
+    return 'Rasio seimbang untuk sweetness, clarity, dan body sedang.';
   }
 }
 
@@ -1318,6 +1529,7 @@ class BrewRecipe {
     required this.grindSize,
     required this.totalTimeSeconds,
     required this.flavorProfile,
+    required this.beanProfile,
     required this.steps,
     required this.tips,
   });
@@ -1333,11 +1545,34 @@ class BrewRecipe {
   final String grindSize;
   final int totalTimeSeconds;
   final String flavorProfile;
+  final CoffeeBeanProfile beanProfile;
   final List<BrewStep> steps;
   final List<String> tips;
 
   String get ratioLabel => '1:${ratio.toStringAsFixed(0)}';
   String get totalTimeLabel => '${totalTimeSeconds ~/ 60} menit';
+}
+
+class CoffeeBeanProfile {
+  const CoffeeBeanProfile({
+    required this.variety,
+    required this.process,
+    required this.roastLevel,
+    required this.origin,
+    required this.character,
+    required this.brewTemperatureHint,
+    required this.grindHint,
+    required this.extractionHint,
+  });
+
+  final String variety;
+  final String process;
+  final String roastLevel;
+  final String origin;
+  final String character;
+  final String brewTemperatureHint;
+  final String grindHint;
+  final String extractionHint;
 }
 
 class BrewStep {
@@ -1366,6 +1601,19 @@ const recipes = [
     grindSize: 'Medium fine',
     totalTimeSeconds: 180,
     flavorProfile: 'Sweet, clean, citrus ringan',
+    beanProfile: CoffeeBeanProfile(
+      variety: 'Typica / Bourbon',
+      process: 'Washed',
+      roastLevel: 'Medium light',
+      origin: 'Indonesia',
+      character:
+          'Acidity cerah, sweetness tebu, body medium, dan finish bersih.',
+      brewTemperatureHint:
+          'Gunakan 91-93 C untuk menjaga acidity tetap hidup tanpa pahit.',
+      grindHint: 'Medium fine agar ekstraksi cukup tanpa drawdown terlalu lama.',
+      extractionHint:
+          'Pour bertahap dan lembut membantu clarity pada biji washed.',
+    ),
     steps: [
       BrewStep(
         title: 'Bloom',
@@ -1406,6 +1654,19 @@ const recipes = [
     grindSize: 'Medium',
     totalTimeSeconds: 210,
     flavorProfile: 'Caramel, round, soft acidity',
+    beanProfile: CoffeeBeanProfile(
+      variety: 'Caturra / Catuai',
+      process: 'Honey',
+      roastLevel: 'Medium',
+      origin: 'Central America',
+      character:
+          'Manis karamel, acidity lembut, body bulat, dan tekstur nyaman.',
+      brewTemperatureHint:
+          'Gunakan 92-94 C untuk membuka sweetness honey process.',
+      grindHint: 'Medium agar aliran stabil dan sweetness tetap tebal.',
+      extractionHint:
+          'Pulse pouring pendek membantu cup lebih manis dan tidak flat.',
+    ),
     steps: [
       BrewStep(
         title: 'Bloom',
@@ -1446,6 +1707,19 @@ const recipes = [
     grindSize: 'Medium fine',
     totalTimeSeconds: 120,
     flavorProfile: 'Bold, sweet, low bitterness',
+    beanProfile: CoffeeBeanProfile(
+      variety: 'Heirloom / Mixed cultivar',
+      process: 'Natural',
+      roastLevel: 'Medium dark',
+      origin: 'Ethiopia / Blend',
+      character:
+          'Aroma buah matang, body tebal, sweetness tinggi, dan acidity rendah.',
+      brewTemperatureHint:
+          'Gunakan 86-89 C agar natural process tidak terlalu pahit.',
+      grindHint: 'Medium fine untuk cup pekat tanpa rasa kasar.',
+      extractionHint:
+          'Steep singkat dan press pelan menjaga sweetness tetap bersih.',
+    ),
     steps: [
       BrewStep(
         title: 'Isi chamber',

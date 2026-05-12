@@ -13,6 +13,8 @@ void main() {
     expect(find.text('V60 Balanced Daily Cup'), findsWidgets);
     expect(find.text('Kalita Sweet Cup'), findsOneWidget);
     expect(find.text('Kalkulator rasio'), findsOneWidget);
+    expect(find.text('Profil biji kopi'), findsOneWidget);
+    expect(find.text('Typica / Bourbon'), findsOneWidget);
     expect(find.text('18 g kopi -> 270 g air'), findsOneWidget);
   });
 
@@ -60,6 +62,10 @@ void main() {
       find.widgetWithText(TextFormField, 'Profil rasa'),
       'Honey, apple, soft finish',
     );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Karakter biji'),
+      'Sweet honey, apple, clean finish',
+    );
 
     await tester.ensureVisible(find.text('Simpan'));
     await tester.tap(find.text('Simpan'));
@@ -68,6 +74,7 @@ void main() {
     expect(find.text('4 resep'), findsOneWidget);
     expect(find.text('Origami Honey Cup'), findsWidgets);
     expect(find.text('20 g kopi -> 320 g air'), findsOneWidget);
+    expect(find.text('Sweet honey, apple, clean finish'), findsOneWidget);
     expect(find.text('Custom'), findsOneWidget);
   });
 
@@ -104,6 +111,10 @@ void main() {
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Profil rasa'),
       'Honey, apple, soft finish',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Karakter biji'),
+      'Sweet honey, apple, clean finish',
     );
     await tester.ensureVisible(find.text('Simpan'));
     await tester.tap(find.text('Simpan'));
