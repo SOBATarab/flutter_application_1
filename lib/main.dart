@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'login_page.dart';
+
 class BrewColors {
   static const ink = Color(0xFFEDE1D0);
   static const muted = Color(0xFFD4C5AB);
@@ -192,7 +194,6 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
               onSelected: _openBrew,
               onAddRecipe: _showAddRecipeForm,
               onDeleteRecipe: _confirmDeleteRecipe,
-              onSearch: _showRecipeSearch,
               onBookmark: (recipe) {
                 _selectRecipe(recipe);
                 _showMessage('${recipe.name} disimpan ke koleksi.');
@@ -206,6 +207,8 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
             _ProfileView(
               recipeCount: allRecipes.length,
               onMenuSelected: _showMessage,
+              onSettings: _showSettingsOptions,
+              onLogin: _openLogin,
             ),
           ),
         ],
@@ -213,8 +216,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 18, 20, 6),
             _Header(
-              onSearch: _showRecipeSearch,
-              onSettings: () => _showMessage('Settings siap dikembangkan.'),
+              onSettings: _showSettingsOptions,
             ),
           ),
           _contentSliver(
@@ -304,30 +306,65 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _showRecipeSearch() async {
+  Future<void> _showSettingsOptions() async {
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cari resep'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final recipe in allRecipes)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.local_cafe),
-                  title: Text(recipe.name),
-                  subtitle: Text(recipe.method),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _openBrew(recipe);
-                  },
-                ),
-            ],
-          ),
+        title: const Text('Pilih settings'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _SettingsChoice(
+              icon: Icons.dark_mode_outlined,
+              title: 'Tema gelap',
+              subtitle: 'Tema gelap sudah aktif untuk app ini.',
+              onTap: () => _closeDialogWithMessage(
+                context,
+                'Tema gelap sudah digunakan.',
+              ),
+            ),
+            _SettingsChoice(
+              icon: Icons.timer_outlined,
+              title: 'Pengingat seduh',
+              subtitle: 'Aktifkan nanti untuk timer dan ritual brew.',
+              onTap: () => _closeDialogWithMessage(
+                context,
+                'Pengingat seduh siap ditambahkan.',
+              ),
+            ),
+            _SettingsChoice(
+              icon: Icons.cloud_sync_outlined,
+              title: 'Backup resep',
+              subtitle: 'Saran: sinkronkan resep ke akun setelah login.',
+              onTap: () => _closeDialogWithMessage(
+                context,
+                'Backup resep cocok dibuat setelah fitur akun aktif.',
+              ),
+            ),
+            _SettingsChoice(
+              icon: Icons.login,
+              title: 'Login akun',
+              subtitle: 'Masuk untuk menyimpan resep dan profil.',
+              onTap: () {
+                Navigator.of(context).pop();
+                _openLogin();
+              },
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  void _closeDialogWithMessage(BuildContext dialogContext, String message) {
+    Navigator.of(dialogContext).pop();
+    _showMessage(message);
+  }
+
+  Future<void> _openLogin() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const LoginPage(),
       ),
     );
   }
@@ -387,11 +424,9 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
 
 class _Header extends StatelessWidget {
   const _Header({
-    required this.onSearch,
     required this.onSettings,
   });
 
-  final VoidCallback onSearch;
   final VoidCallback onSettings;
 
   @override
@@ -424,12 +459,6 @@ class _Header extends StatelessWidget {
             ),
           ),
         ),
-        _HeaderIcon(
-          icon: Icons.search,
-          tooltip: 'Cari resep',
-          onTap: onSearch,
-        ),
-        const SizedBox(width: 8),
         _HeaderIcon(
           icon: Icons.settings_outlined,
           tooltip: 'Settings',
@@ -469,6 +498,31 @@ class _HeaderIcon extends StatelessWidget {
           child: Icon(icon, color: BrewColors.muted, size: 18),
         ),
       ),
+    );
+  }
+}
+
+class _SettingsChoice extends StatelessWidget {
+  const _SettingsChoice({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: BrewColors.goldSoft),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      onTap: onTap,
     );
   }
 }
@@ -1388,7 +1442,6 @@ class _CollectionView extends StatelessWidget {
     required this.onSelected,
     required this.onAddRecipe,
     required this.onDeleteRecipe,
-    required this.onSearch,
     required this.onBookmark,
   });
 
@@ -1397,7 +1450,6 @@ class _CollectionView extends StatelessWidget {
   final ValueChanged<BrewRecipe> onSelected;
   final VoidCallback onAddRecipe;
   final ValueChanged<BrewRecipe> onDeleteRecipe;
-  final VoidCallback onSearch;
   final ValueChanged<BrewRecipe> onBookmark;
 
   @override
@@ -1411,18 +1463,12 @@ class _CollectionView extends StatelessWidget {
           icon: Icons.collections_bookmark_outlined,
         ),
         const SizedBox(height: 16),
-        TextField(
-          readOnly: true,
-          onTap: onSearch,
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
-            hintText: 'Cari resep atau catatan...',
-            hintStyle: const TextStyle(color: BrewColors.muted),
-            suffixIcon: IconButton(
-              onPressed: onAddRecipe,
-              icon: const Icon(Icons.add),
-              tooltip: 'Tambah resep',
-            ),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: onAddRecipe,
+            icon: const Icon(Icons.add),
+            label: const Text('Tambah resep'),
           ),
         ),
         const SizedBox(height: 14),
@@ -1558,10 +1604,14 @@ class _ProfileView extends StatelessWidget {
   const _ProfileView({
     required this.recipeCount,
     required this.onMenuSelected,
+    required this.onSettings,
+    required this.onLogin,
   });
 
   final int recipeCount;
   final ValueChanged<String> onMenuSelected;
+  final VoidCallback onSettings;
+  final VoidCallback onLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -1679,7 +1729,12 @@ class _ProfileView extends StatelessWidget {
         _ProfileMenu(
           icon: Icons.settings_outlined,
           title: 'Settings',
-          onTap: () => onMenuSelected('Settings siap dikembangkan.'),
+          onTap: onSettings,
+        ),
+        _ProfileMenu(
+          icon: Icons.login,
+          title: 'Login',
+          onTap: onLogin,
         ),
       ],
     );
