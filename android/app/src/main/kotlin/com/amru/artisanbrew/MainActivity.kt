@@ -1,4 +1,4 @@
-package com.example.flutter_application_1
+package com.amru.artisanbrew
 
 import io.flutter.embedding.android.FlutterActivity
 

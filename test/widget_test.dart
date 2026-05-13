@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flutter_application_1/main.dart';
+import 'package:artisan_brew/main.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('shows manual brew recipes and ratio calculator', (
     WidgetTester tester,
   ) async {
@@ -42,8 +47,6 @@ void main() {
 
     await tester.tap(find.byTooltip('Tambah resep'));
     await tester.pumpAndSettle();
-
-    expect(find.text('Pilih foto'), findsOneWidget);
 
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Nama resep'),

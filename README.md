@@ -1,4 +1,6 @@
-# flutter_application_1
+# Artisan Brew
+
+Aplikasi resep manual brew untuk menyimpan rasio, profil biji kopi, langkah seduh, dan timer brewing.
 
 A new Flutter project.
 

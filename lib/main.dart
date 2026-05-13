@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-
-import 'login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BrewColors {
   static const ink = Color(0xFFEDE1D0);
@@ -32,10 +30,6 @@ class BrewImages {
       'https://lh3.googleusercontent.com/aida-public/AB6AXuBzhzk4u-JY_FnLei65vA9JxwmmoE2R6RVIdnKexNCCe5GGXqAeSh4NX442XyTlpo9egdDXo_O5oBOzfllrrf-kmpU-WJP_0DAuQDwpfxsgdoJSnGsPZ8i-vmz6p2CCZJIVo1T2b_jwqrv5rH6fzl0X8iCFKXGoVeOO9wM8QGK_G694Sz5N0WH8w9zD1BD6sju673NCCToznhkZg-itCx2p_ofV161dEb2qRpao1g4yEzu1QJ-C6ioXIA4zfdsUvDU1itPkgWl5ZaI';
   static const aeroPress =
       'https://lh3.googleusercontent.com/aida-public/AB6AXuASn7QwGAyaANRnHdo9pkrQfeZ9znSDKGQSHAA1ERWcmuWSkCI1sVOAAhMhTzBGSNfIqgvFAn1EYhnO-PNWXp4pZl9xYL5zWs4UUhc0gOxbl7FfhbVqtShjvyZ2Vw1w5MSs8rxsU2NLsOouzGZtwHTRHnVG_3i967yyMPO5_9MQTZIH0FNozcF9v1i2z69kvtfWDblBib2UyvlD_X9VAcj20PPAgXxqb_6-i8-vJjVCzRVavZ59wvHnPu49DX9HDA85RUTnpqFEpu4';
-  static const frenchPress =
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB2D0LiSK3rD-6xUh_TuF5Q4lAa02eO2umzkjZ8GJzYMDiwEHC1aT6vgipp0qlVKu_9f5zHliKC56gra2cTuYLBGC6u8gNitFAYQKbe_jFDys1aOXdnJOl_v2Xtec9Ut5bn6nPvADilw396welfuZms7Wumtx2hgwEyR7SG7bdtUuacgsgNypAnmFNr9Frc_COiOtE37opCZ5KeuAq9wfcUSWLyeIQvWmFysrumlpwZO_ttqUDbcgdL2N45Q5N-HckIizLnp5jJ6xI';
-  static const profile =
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBgwrY-ejgIylUzRtvgahJzuVepwgzr6IXzWlXOgWK-bopUBO9kmwA3snnlKwexsIf_kmBcwRVmz4NIVPPr-n1u1r1YWljYSR7NF5SVSkkAoDoXqlutCqJ8VnxK1Y6ISkRw4wSeNnMK7lB9OEJ4AxJUZt0u8-rS0-Jv4X17TBTQ4uqpMu6BSi-EFiERbsBbr-He6RzTwwgsh7p7dCAthSH44JJLLQnoccGHwX7_AKzhqK13oak5RAWAweMXdjCBwVNhwSUj4ey5BHE';
 }
 
 void main() {
@@ -116,6 +110,8 @@ class RecipeHomePage extends StatefulWidget {
 }
 
 class _RecipeHomePageState extends State<RecipeHomePage> {
+  static const savedRecipesKey = 'artisan_brew_recipes_v1';
+
   final List<BrewRecipe> allRecipes = List.of(recipes);
   BrewRecipe? selectedRecipe;
   String selectedMethod = 'Semua';
@@ -135,6 +131,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
   void initState() {
     super.initState();
     selectedRecipe = allRecipes.first;
+    _loadSavedRecipes();
   }
 
   @override
@@ -152,6 +149,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
       bottomNavigationBar: _ArtisanBottomNav(
         activeIndex: activeTab,
         onSelected: (index) => setState(() => activeTab = index),
+        onAbout: _showAboutApp,
       ),
       body: DecoratedBox(
         decoration: const BoxDecoration(
@@ -201,17 +199,6 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
             ),
           ),
         ],
-      3 => [
-          _contentSliver(
-            const EdgeInsets.fromLTRB(20, 18, 20, 24),
-            _ProfileView(
-              recipeCount: allRecipes.length,
-              onMenuSelected: _showMessage,
-              onSettings: _showSettingsOptions,
-              onLogin: _openLogin,
-            ),
-          ),
-        ],
       _ => [
           _contentSliver(
             const EdgeInsets.fromLTRB(20, 18, 20, 6),
@@ -254,6 +241,44 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
           ),
         ],
     };
+  }
+
+  Future<void> _loadSavedRecipes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encodedRecipes = prefs.getString(savedRecipesKey);
+    if (encodedRecipes == null) {
+      return;
+    }
+
+    final decodedRecipes = jsonDecode(encodedRecipes);
+    if (decodedRecipes is! List) {
+      return;
+    }
+
+    final loadedRecipes = decodedRecipes
+        .whereType<Map>()
+        .map((recipe) => BrewRecipe.fromJson(recipe.cast<String, Object?>()))
+        .toList();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      allRecipes
+        ..clear()
+        ..addAll(loadedRecipes);
+      selectedRecipe = allRecipes.isEmpty ? null : allRecipes.first;
+      selectedMethod = 'Semua';
+    });
+  }
+
+  Future<void> _saveRecipes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encodedRecipes = jsonEncode(
+      allRecipes.map((recipe) => recipe.toJson()).toList(),
+    );
+    await prefs.setString(savedRecipesKey, encodedRecipes);
   }
 
   SliverToBoxAdapter _contentSliver(EdgeInsets padding, Widget child) {
@@ -333,12 +358,12 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
               ),
             ),
             _SettingsChoice(
-              icon: Icons.login,
-              title: 'Login akun',
-              subtitle: 'Masuk untuk menyimpan resep dan profil.',
+              icon: Icons.info_outline,
+              title: 'Tentang Aplikasi',
+              subtitle: 'Lihat versi, tujuan app, dan catatan rilis.',
               onTap: () {
                 Navigator.of(context).pop();
-                _openLogin();
+                _showAboutApp();
               },
             ),
           ],
@@ -352,11 +377,20 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
     _showMessage(message);
   }
 
-  Future<void> _openLogin() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const LoginPage(),
+  void _showAboutApp() {
+    showAboutDialog(
+      context: context,
+      applicationName: 'Artisan Brew',
+      applicationVersion: '1.0.0',
+      applicationIcon: const Icon(
+        Icons.local_cafe,
+        color: BrewColors.goldSoft,
       ),
+      children: const [
+        Text(
+          'Artisan Brew membantu menyimpan resep manual brew, rasio seduh, profil biji kopi, dan timer brewing dalam satu aplikasi.',
+        ),
+      ],
     );
   }
 
@@ -377,6 +411,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
       selectedMethod = 'Semua';
       selectedRecipe = recipe;
     });
+    await _saveRecipes();
   }
 
   Future<void> _confirmDeleteRecipe(BrewRecipe recipe) async {
@@ -410,6 +445,7 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
         selectedRecipe = filteredRecipes.isEmpty ? null : filteredRecipes.first;
       }
     });
+    await _saveRecipes();
   }
 }
 
@@ -621,10 +657,12 @@ class _ArtisanBottomNav extends StatelessWidget {
   const _ArtisanBottomNav({
     required this.activeIndex,
     required this.onSelected,
+    required this.onAbout,
   });
 
   final int activeIndex;
   final ValueChanged<int> onSelected;
+  final VoidCallback onAbout;
 
   @override
   Widget build(BuildContext context) {
@@ -668,10 +706,10 @@ class _ArtisanBottomNav extends StatelessWidget {
               onTap: () => onSelected(2),
             ),
             _NavItem(
-              icon: Icons.person_outline,
-              label: 'Profil',
-              active: activeIndex == 3,
-              onTap: () => onSelected(3),
+              icon: Icons.info_outline,
+              label: 'Tentang',
+              active: false,
+              onTap: onAbout,
             ),
           ],
         ),
@@ -770,7 +808,6 @@ class _BrewFocusCard extends StatelessWidget {
                 children: [
                   _RecipePhotoFrame(
                     label: selectedRecipe.photoHint,
-                    imagePath: selectedRecipe.photoPath,
                     imageUrl: selectedRecipe.photoUrl,
                     height: 320,
                   ),
@@ -918,23 +955,18 @@ class _FocusMetric extends StatelessWidget {
 class _RecipePhotoFrame extends StatelessWidget {
   const _RecipePhotoFrame({
     required this.label,
-    this.imagePath,
     this.imageUrl,
     this.height = 150,
     this.compact = false,
   });
 
   final String label;
-  final String? imagePath;
   final String? imageUrl;
   final double height;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final resolvedImagePath = imagePath?.trim();
-    final hasImage = resolvedImagePath != null && resolvedImagePath.isNotEmpty;
-    final imageFile = hasImage ? XFile(resolvedImagePath) : null;
     final resolvedImageUrl = imageUrl?.trim();
     final hasNetworkImage =
         resolvedImageUrl != null && resolvedImageUrl.isNotEmpty;
@@ -949,33 +981,7 @@ class _RecipePhotoFrame extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          if (hasImage)
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: FutureBuilder<Uint8List>(
-                  future: imageFile!.readAsBytes(),
-                  builder: (context, snapshot) {
-                    final bytes = snapshot.data;
-                    if (bytes == null) {
-                      return _PhotoPlaceholder(label: label, compact: compact);
-                    }
-
-                    return Image.memory(
-                      bytes,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _PhotoPlaceholder(
-                          label: label,
-                          compact: compact,
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            )
-          else if (hasNetworkImage)
+          if (hasNetworkImage)
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -992,7 +998,7 @@ class _RecipePhotoFrame extends StatelessWidget {
             Positioned.fill(
               child: _PhotoPlaceholder(label: label, compact: compact),
             ),
-          if (hasImage || hasNetworkImage)
+          if (hasNetworkImage)
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -1313,7 +1319,6 @@ class _LatestRecipeCard extends StatelessWidget {
               children: [
                 _RecipePhotoFrame(
                   label: recipe.photoHint,
-                  imagePath: recipe.photoPath,
                   imageUrl: recipe.photoUrl,
                   height: 160,
                   compact: true,
@@ -1516,7 +1521,6 @@ class _CollectionRecipeTile extends StatelessWidget {
             children: [
               _RecipePhotoFrame(
                 label: recipe.photoHint,
-                imagePath: recipe.photoPath,
                 imageUrl: recipe.photoUrl,
                 height: 138,
               ),
@@ -1591,147 +1595,6 @@ class _CollectionRecipeTile extends StatelessWidget {
   }
 }
 
-class _ProfileView extends StatelessWidget {
-  const _ProfileView({
-    required this.recipeCount,
-    required this.onMenuSelected,
-    required this.onSettings,
-    required this.onLogin,
-  });
-
-  final int recipeCount;
-  final ValueChanged<String> onMenuSelected;
-  final VoidCallback onSettings;
-  final VoidCallback onLogin;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _ScreenTitle(
-          title: 'Profil Pengguna',
-          subtitle: 'Manual brewer dan pencatat ritual kopi.',
-          icon: Icons.person_outline,
-        ),
-        const SizedBox(height: 18),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: BrewColors.surface,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: BrewColors.line),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 86,
-                height: 86,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: BrewColors.warm,
-                  border: Border.all(color: BrewColors.goldSoft, width: 1.4),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.network(
-                  BrewImages.profile,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.person,
-                      color: BrewColors.goldSoft,
-                      size: 42,
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                'Andi Seduh',
-                style: TextStyle(
-                  color: BrewColors.cream,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Master Brewer & Ritualist',
-                style: TextStyle(
-                  color: BrewColors.goldSoft,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: _ProfileStat(
-                      label: 'Total resep',
-                      value: '$recipeCount',
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: _ProfileStat(label: 'Koleksi', value: '12'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        const Text(
-          'Metode Favorit',
-          style: TextStyle(
-            color: BrewColors.ink,
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 10),
-        _ProfileMenu(
-          icon: Icons.filter_alt_outlined,
-          title: 'V60',
-          onTap: () => onMenuSelected('Metode V60 dipilih.'),
-        ),
-        _ProfileMenu(
-          icon: Icons.compress,
-          title: 'AeroPress',
-          onTap: () => onMenuSelected('Metode AeroPress dipilih.'),
-        ),
-        _ProfileMenu(
-          icon: Icons.local_cafe_outlined,
-          title: 'Chemex',
-          onTap: () => onMenuSelected('Metode Chemex dipilih.'),
-        ),
-        const SizedBox(height: 12),
-        _ProfileMenu(
-          icon: Icons.history,
-          title: 'Riwayat Seduh',
-          onTap: () => onMenuSelected('Riwayat seduh belum ada.'),
-        ),
-        _ProfileMenu(
-          icon: Icons.workspace_premium_outlined,
-          title: 'Badge Pencapaian',
-          onTap: () => onMenuSelected('Badge pencapaian siap ditambahkan.'),
-        ),
-        _ProfileMenu(
-          icon: Icons.settings_outlined,
-          title: 'Settings',
-          onTap: onSettings,
-        ),
-        _ProfileMenu(
-          icon: Icons.login,
-          title: 'Login',
-          onTap: onLogin,
-        ),
-      ],
-    );
-  }
-}
-
 class _ScreenTitle extends StatelessWidget {
   const _ScreenTitle({
     required this.title,
@@ -1780,101 +1643,6 @@ class _ScreenTitle extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ProfileStat extends StatelessWidget {
-  const _ProfileStat({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-      decoration: BoxDecoration(
-        color: BrewColors.warm,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: BrewColors.line),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              color: BrewColors.goldSoft,
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: BrewColors.muted,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileMenu extends StatelessWidget {
-  const _ProfileMenu({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: BrewColors.surface,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: BrewColors.line),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: BrewColors.goldSoft, size: 18),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: BrewColors.ink,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const Icon(
-                  Icons.chevron_right,
-                  color: BrewColors.muted,
-                  size: 18,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -2009,7 +1777,6 @@ class _RecipeHero extends StatelessWidget {
         children: [
           _RecipePhotoFrame(
             label: recipe.photoHint,
-            imagePath: recipe.photoPath,
             imageUrl: recipe.photoUrl,
             height: 360,
           ),
@@ -2625,7 +2392,6 @@ class AddRecipeSheet extends StatefulWidget {
 
 class _AddRecipeSheetState extends State<AddRecipeSheet> {
   final formKey = GlobalKey<FormState>();
-  final imagePicker = ImagePicker();
   final nameController = TextEditingController();
   final methodController = TextEditingController(text: 'V60');
   final descriptionController = TextEditingController();
@@ -2639,7 +2405,6 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
   final roastController = TextEditingController(text: 'Medium light');
   final originController = TextEditingController(text: 'Indonesia');
   final beanCharacterController = TextEditingController();
-  String? selectedPhotoPath;
 
   @override
   void dispose() {
@@ -2752,11 +2517,6 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
                 icon: Icons.spa,
                 validator: _requiredValidator,
               ),
-              _PhotoPickerField(
-                photoPath: selectedPhotoPath,
-                onPickPhoto: _pickPhoto,
-                onClearPhoto: _clearPhoto,
-              ),
               const SizedBox(height: 6),
               const Text(
                 'Profil biji kopi',
@@ -2866,7 +2626,6 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
         grindSize: grindController.text.trim(),
         totalTimeSeconds: 180,
         flavorProfile: flavorController.text.trim(),
-        photoPath: selectedPhotoPath,
         photoHint:
             'Foto ${methodController.text.trim()} ${nameController.text.trim()}',
         beanProfile: CoffeeBeanProfile(
@@ -2927,31 +2686,6 @@ class _AddRecipeSheetState extends State<AddRecipeSheet> {
     }
 
     return null;
-  }
-
-  Future<void> _pickPhoto() async {
-    final photo = await imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
-
-    if (photo == null) {
-      return;
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      selectedPhotoPath = photo.path;
-    });
-  }
-
-  void _clearPhoto() {
-    setState(() {
-      selectedPhotoPath = null;
-    });
   }
 
   String _temperatureHint(int temperature) {
@@ -3025,80 +2759,6 @@ class _TextInput extends StatelessWidget {
   }
 }
 
-class _PhotoPickerField extends StatelessWidget {
-  const _PhotoPickerField({
-    required this.photoPath,
-    required this.onPickPhoto,
-    required this.onClearPhoto,
-  });
-
-  final String? photoPath;
-  final VoidCallback onPickPhoto;
-  final VoidCallback onClearPhoto;
-
-  @override
-  Widget build(BuildContext context) {
-    final fileName = photoPath == null ? null : XFile(photoPath!).name;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: BrewColors.surfaceHigh,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: BrewColors.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(
-                Icons.add_photo_alternate_outlined,
-                color: BrewColors.sage,
-              ),
-              SizedBox(width: 8),
-              Text(
-                'Foto resep',
-                style: TextStyle(
-                  color: BrewColors.ink,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            fileName ?? 'Belum ada foto. Pilih gambar JPG/PNG dari galeri.',
-            style: const TextStyle(color: BrewColors.muted, height: 1.35),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onPickPhoto,
-                  icon: const Icon(Icons.photo_library_outlined),
-                  label: const Text('Pilih foto'),
-                ),
-              ),
-              if (photoPath != null) ...[
-                const SizedBox(width: 10),
-                IconButton.outlined(
-                  onPressed: onClearPhoto,
-                  icon: const Icon(Icons.close),
-                  tooltip: 'Hapus foto',
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class BrewRecipe {
   const BrewRecipe({
     required this.name,
@@ -3112,7 +2772,6 @@ class BrewRecipe {
     required this.grindSize,
     required this.totalTimeSeconds,
     required this.flavorProfile,
-    this.photoPath,
     this.photoUrl,
     required this.photoHint,
     required this.beanProfile,
@@ -3131,7 +2790,6 @@ class BrewRecipe {
   final String grindSize;
   final int totalTimeSeconds;
   final String flavorProfile;
-  final String? photoPath;
   final String? photoUrl;
   final String photoHint;
   final CoffeeBeanProfile beanProfile;
@@ -3140,6 +2798,54 @@ class BrewRecipe {
 
   String get ratioLabel => '1:${ratio.toStringAsFixed(0)}';
   String get totalTimeLabel => '${totalTimeSeconds ~/ 60} menit';
+
+  factory BrewRecipe.fromJson(Map<String, Object?> json) {
+    return BrewRecipe(
+      name: json['name'] as String? ?? '',
+      method: json['method'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      difficulty: json['difficulty'] as String? ?? 'Custom',
+      ratio: (json['ratio'] as num?)?.toDouble() ?? 15,
+      coffeeGrams: (json['coffeeGrams'] as num?)?.round() ?? 18,
+      waterGrams: (json['waterGrams'] as num?)?.round() ?? 270,
+      temperatureCelsius:
+          (json['temperatureCelsius'] as num?)?.round() ?? 92,
+      grindSize: json['grindSize'] as String? ?? 'Medium',
+      totalTimeSeconds: (json['totalTimeSeconds'] as num?)?.round() ?? 180,
+      flavorProfile: json['flavorProfile'] as String? ?? '',
+      photoUrl: json['photoUrl'] as String?,
+      photoHint: json['photoHint'] as String? ?? 'Foto resep kopi',
+      beanProfile: CoffeeBeanProfile.fromJson(
+        (json['beanProfile'] as Map?)?.cast<String, Object?>() ?? const {},
+      ),
+      steps: ((json['steps'] as List?) ?? const [])
+          .whereType<Map>()
+          .map((step) => BrewStep.fromJson(step.cast<String, Object?>()))
+          .toList(),
+      tips: ((json['tips'] as List?) ?? const []).whereType<String>().toList(),
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'name': name,
+      'method': method,
+      'description': description,
+      'difficulty': difficulty,
+      'ratio': ratio,
+      'coffeeGrams': coffeeGrams,
+      'waterGrams': waterGrams,
+      'temperatureCelsius': temperatureCelsius,
+      'grindSize': grindSize,
+      'totalTimeSeconds': totalTimeSeconds,
+      'flavorProfile': flavorProfile,
+      'photoUrl': photoUrl,
+      'photoHint': photoHint,
+      'beanProfile': beanProfile.toJson(),
+      'steps': steps.map((step) => step.toJson()).toList(),
+      'tips': tips,
+    };
+  }
 }
 
 class CoffeeBeanProfile {
@@ -3162,6 +2868,32 @@ class CoffeeBeanProfile {
   final String brewTemperatureHint;
   final String grindHint;
   final String extractionHint;
+
+  factory CoffeeBeanProfile.fromJson(Map<String, Object?> json) {
+    return CoffeeBeanProfile(
+      variety: json['variety'] as String? ?? 'Arabica',
+      process: json['process'] as String? ?? 'Washed',
+      roastLevel: json['roastLevel'] as String? ?? 'Medium',
+      origin: json['origin'] as String? ?? 'Indonesia',
+      character: json['character'] as String? ?? '',
+      brewTemperatureHint: json['brewTemperatureHint'] as String? ?? '',
+      grindHint: json['grindHint'] as String? ?? '',
+      extractionHint: json['extractionHint'] as String? ?? '',
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'variety': variety,
+      'process': process,
+      'roastLevel': roastLevel,
+      'origin': origin,
+      'character': character,
+      'brewTemperatureHint': brewTemperatureHint,
+      'grindHint': grindHint,
+      'extractionHint': extractionHint,
+    };
+  }
 }
 
 class BrewStep {
@@ -3174,6 +2906,22 @@ class BrewStep {
   final String title;
   final String instruction;
   final int startSecond;
+
+  factory BrewStep.fromJson(Map<String, Object?> json) {
+    return BrewStep(
+      title: json['title'] as String? ?? '',
+      instruction: json['instruction'] as String? ?? '',
+      startSecond: (json['startSecond'] as num?)?.round() ?? 0,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'title': title,
+      'instruction': instruction,
+      'startSecond': startSecond,
+    };
+  }
 }
 
 const recipes = [
