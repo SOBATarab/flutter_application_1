@@ -315,15 +315,6 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _SettingsChoice(
-              icon: Icons.dark_mode_outlined,
-              title: 'Tema gelap',
-              subtitle: 'Tema gelap sudah aktif untuk app ini.',
-              onTap: () => _closeDialogWithMessage(
-                context,
-                'Tema gelap sudah digunakan.',
-              ),
-            ),
-            _SettingsChoice(
               icon: Icons.timer_outlined,
               title: 'Pengingat seduh',
               subtitle: 'Aktifkan nanti untuk timer dan ritual brew.',
